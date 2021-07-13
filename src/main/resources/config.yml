@@ -1,0 +1,38 @@
+# ----------------------------------------------------------------------------
+# Matchmaker Main Configuration
+# ----------------------------------------------------------------------------
+
+commands:
+  makematch:
+    name: makematch
+    permission: matchmaker.command.makematch
+    aliases: [makemeamatch]
+  lobby:
+    name: lobby
+    permission: matchmaker.command.lobby
+    aliases: [l, hub]
+
+base_game_permission: matchmaker.game # This is permission used to check if the player can access the game.
+# Example: matchmaker.game.lobby
+timeout: 750 # The time to wait in ms before timing out when pinging servers.
+fallback:
+  game: limbo
+  message: Something went wrong! You have been sent to limbo.
+login:
+  game: lobby
+  after: 0 # In seconds, the time to wait before trying to find the player a server.
+  # It's non-trivial to send players to a game on login.
+  # Your options are either blocking the network thread or sending players to a temp server and then sending them somewhere else from there.
+  # I may create a fork of Waterfall that fires more handler methods and events async.
+games:
+  limbo:
+    - limbo
+  lobby:
+    - hub1
+    - hub2
+  advancementhunt:
+    - ah1
+    - ah2
+    - ah3
+    - ah4
+    - ah5

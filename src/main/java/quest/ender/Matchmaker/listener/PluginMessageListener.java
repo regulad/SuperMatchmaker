@@ -30,6 +30,15 @@ public class PluginMessageListener implements Listener {
             final @NotNull ServerInfo serverInfo = proxiedPlayer.getServer().getInfo();
 
             switch (inputStream.readUTF()) {
+                case "GetGames":
+                    final @NotNull ByteArrayDataOutput getGamesOutput = ByteStreams.newDataOutput();
+
+                    getGamesOutput.writeUTF("GetGames");
+                    getGamesOutput.writeUTF(String.join(", ", this.matchmaker.getGames()));
+
+                    serverInfo.sendData("matchmaker:in", getGamesOutput.toByteArray());
+
+                    break;
                 case "SendToGame":
                     final @NotNull String gameToSend = inputStream.readUTF();
 
@@ -39,6 +48,7 @@ public class PluginMessageListener implements Listener {
                         serverInfoCompletableFuture.thenApply((targetServerInfo) -> {
                             final @NotNull ByteArrayDataOutput sendGameOutput = ByteStreams.newDataOutput();
                             sendGameOutput.writeUTF("SendToGame");
+                            sendGameOutput.writeUTF(proxiedPlayer.getDisplayName());
                             sendGameOutput.writeUTF(targetServerInfo.getName());
 
                             serverInfo.sendData("matchmaker:in", sendGameOutput.toByteArray());
@@ -51,6 +61,7 @@ public class PluginMessageListener implements Listener {
                                 serverInfoCompletableFuture.cancel(true);
                                 final @NotNull ByteArrayDataOutput sendGameOutput = ByteStreams.newDataOutput();
                                 sendGameOutput.writeUTF("SendToGame");
+                                sendGameOutput.writeUTF(proxiedPlayer.getDisplayName());
                                 sendGameOutput.writeUTF("null");
 
                                 serverInfo.sendData("matchmaker:in", sendGameOutput.toByteArray());
@@ -60,6 +71,7 @@ public class PluginMessageListener implements Listener {
                     } else {
                         final @NotNull ByteArrayDataOutput sendGameOutput = ByteStreams.newDataOutput();
                         sendGameOutput.writeUTF("SendToGame");
+                        sendGameOutput.writeUTF(proxiedPlayer.getDisplayName());
                         sendGameOutput.writeUTF("null");
 
                         serverInfo.sendData("matchmaker:in", sendGameOutput.toByteArray());

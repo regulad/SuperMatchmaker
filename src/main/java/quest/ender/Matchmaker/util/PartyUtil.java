@@ -32,4 +32,33 @@ public class PartyUtil {
 
         return proxiedPlayers;
     }
+
+    /**
+     * Gets the leader of a {@link PlayerParty}.
+     *
+     * @param player The {@link ProxiedPlayer} in question.
+     * @return The {@link ProxiedPlayer} that leads {@code player}'s party. If {@code player} is not in a party, return {@code player}.
+     */
+    public static @NotNull ProxiedPlayer getLeader(ProxiedPlayer player) {
+        final @NotNull OnlinePAFPlayer onlinePAFPlayer = PAFPlayerManager.getInstance().getPlayer(player);
+        final @Nullable PlayerParty playerParty = onlinePAFPlayer.getParty();
+
+        if (playerParty != null) {
+            return playerParty.getLeader().getPlayer();
+        } else {
+            return player;
+        }
+    }
+
+    /**
+     * Sees if a {@link ProxiedPlayer} is the leader of a party.
+     * @param player The {@link ProxiedPlayer} in question.
+     * @return {@code true} if the player is not in a party or is the leader, else {@code false}.
+     */
+    public static boolean leadsParty(ProxiedPlayer player) {
+        final @NotNull OnlinePAFPlayer onlinePAFPlayer = PAFPlayerManager.getInstance().getPlayer(player);
+        final @Nullable PlayerParty playerParty = onlinePAFPlayer.getParty();
+
+        return playerParty == null || playerParty.isLeader(onlinePAFPlayer);
+    }
 }

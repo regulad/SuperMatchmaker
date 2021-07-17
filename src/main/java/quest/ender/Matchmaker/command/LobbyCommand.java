@@ -21,7 +21,7 @@ public class LobbyCommand extends Command {
 
     @Override
     public void execute(@NotNull CommandSender sender, @NotNull String[] args) {
-        this.matchmaker.getProxy().getPluginManager().dispatchCommand(sender, this.matchmaker.getConfig().getString("commands.makematch.name") + " " + this.matchmaker.getConfig().getString("login"));
+        this.matchmaker.getProxy().getPluginManager().dispatchCommand(sender, this.matchmaker.getConfig().getString("commands.makematch.name") + " " + this.matchmaker.getConfig().getString("lobby_game"));
         // I hate this, but BungeeCord is weird as hell.
     }
 }

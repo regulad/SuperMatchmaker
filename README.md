@@ -53,3 +53,9 @@ Data will be sent on `matchmaker:out`, and data will be received on `matchmaker:
         * Returns `Number of players in servers hosting that game. If the game is not found, return 0.`
 * Subchannel `GetGame`
     * Returns `Name of the game the player is currently in.`
+* Subchannel `GetGames`
+    * Returns `A list of all games the server can connect you to, seperated by a ,`
+* Subchannel `SentToGame`
+    * Data `name of the game`
+        * This message will be dispatched when a player joins the server via Matchmaker. May be multiple seperated by a `, `. Note that only one message will be sent a server, and the player used to send it may be disregarded.
+    

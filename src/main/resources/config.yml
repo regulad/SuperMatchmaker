@@ -11,15 +11,21 @@ commands:
     name: lobby
     permission: matchmaker.command.lobby
     aliases: [l, hub]
+  mmreload:
+    name: mmreload
+    permission: matchmaker.command.mmreload
+    aliases: []
 
 base_game_permission: matchmaker.game # This is permission used to check if the player can access the game.
 # Example: matchmaker.game.lobby
 timeout: 750 # The time to wait in ms before timing out when pinging servers.
+lobby_game: lobby # The game to be used
 fallback:
   game: limbo
   message: Something went wrong! You have been sent to limbo.
 login:
   game: lobby
+  holding: limbo # The **server** where players will be held until a usage server is found.
   after: 0 # In seconds, the time to wait before trying to find the player a server.
   # It's non-trivial to send players to a game on login.
   # Your options are either blocking the network thread or sending players to a temp server and then sending them somewhere else from there.

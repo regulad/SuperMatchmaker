@@ -12,9 +12,11 @@ import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import quest.ender.Matchmaker.command.LobbyCommand;
 import quest.ender.Matchmaker.command.MakeMatchCommand;
+import quest.ender.Matchmaker.command.LobbyCommand;
+import quest.ender.Matchmaker.command.ReloadCommand;
 import quest.ender.Matchmaker.events.PreGameSendEvent;
+import quest.ender.Matchmaker.handler.ForcedServerReconnectHandler;
 import quest.ender.Matchmaker.listener.ConnectionListener;
 import quest.ender.Matchmaker.listener.GameSendListener;
 import quest.ender.Matchmaker.listener.PluginMessageListener;
@@ -38,21 +40,20 @@ public class Matchmaker extends Plugin {
 
         if (this.getConfig() == null) this.getLogger().warning("Couldn't load configuration!");
 
-        final @NotNull ProxyServer proxyServer = this.getProxy();
+        this.getProxy().registerChannel("matchmaker:in");
+        this.getProxy().registerChannel("matchmaker:out");
 
-        proxyServer.registerChannel("matchmaker:in");
-        proxyServer.registerChannel("matchmaker:out");
+        this.getProxy().getPluginManager().registerCommand(this, new MakeMatchCommand(this, this.getConfig().getString("commands.makematch.name"), this.getConfig().getString("commands.makematch.permission"), Iterables.toArray(this.getConfig().getStringList("commands.makematch.aliases"), String.class)));
+        this.getProxy().getPluginManager().registerCommand(this, new LobbyCommand(this, this.getConfig().getString("commands.lobby.name"), this.getConfig().getString("commands.lobby.permission"), Iterables.toArray(this.getConfig().getStringList("commands.lobby.aliases"), String.class)));
+        this.getProxy().getPluginManager().registerCommand(this, new ReloadCommand(this, this.getConfig().getString("commands.mmreload.name"), this.getConfig().getString("commands.mmreload.permission"), Iterables.toArray(this.getConfig().getStringList("commands.mmreload.aliases"), String.class)));
 
-        final @NotNull PluginManager pluginManager = proxyServer.getPluginManager();
+        this.getProxy().getPluginManager().registerListener(this, new GameSendListener(this));
+        this.getProxy().getPluginManager().registerListener(this, new PluginMessageListener(this));
+        this.getProxy().getPluginManager().registerListener(this, new ConnectionListener(this));
 
-        pluginManager.registerCommand(this, new MakeMatchCommand(this, this.getConfig().getString("commands.makematch.name"), this.getConfig().getString("commands.makematch.permission"), Iterables.toArray(this.getConfig().getStringList("commands.makematch.aliases"), String.class)));
-        pluginManager.registerCommand(this, new LobbyCommand(this, this.getConfig().getString("commands.lobby.name"), this.getConfig().getString("commands.lobby.permission"), Iterables.toArray(this.getConfig().getStringList("commands.lobby.aliases"), String.class)));
+        final @Nullable ServerInfo forcedServer = this.getProxy().getServerInfo(this.getConfig().getString("login.holding"));
 
-        pluginManager.registerListener(this, new GameSendListener(this));
-        pluginManager.registerListener(this, new PluginMessageListener(this));
-        pluginManager.registerListener(this, new ConnectionListener(this));
-
-        this.getLogger().info("All done loading.");
+        if (forcedServer != null) this.getProxy().setReconnectHandler(new ForcedServerReconnectHandler(forcedServer));
     }
 
     @Override
@@ -65,8 +66,6 @@ public class Matchmaker extends Plugin {
         final @NotNull PluginManager pluginManager = proxyServer.getPluginManager();
         pluginManager.unregisterCommands(this);
         pluginManager.unregisterListeners(this);
-
-        this.getLogger().info("Bye!");
     }
 
     public void saveDefaultConfig() {
@@ -174,10 +173,12 @@ public class Matchmaker extends Plugin {
      * Get a {@link ServerInfo} capable of receiving the proxiedPlayers. This may take as long as a second, since it has to ping servers.
      *
      * @param gameName       The name of the game, in {@link String} form.
-     * @param proxiedPlayers A {@link List} of players that must be accommodated.
+     * @param proxiedPlayers The number of players the server must accept.
      * @return A future that returns a {@link ServerInfo} that must accommodate players. If no servers are found, the future will not complete. This is only valid in the instant that is received, since the state of the server may change. (i.e. a player joining, putting the server over it's limit)
      */
-    public @NotNull CompletableFuture<ServerInfo> getServer(String gameName, List<ProxiedPlayer> proxiedPlayers) {
+    public @Nullable CompletableFuture<ServerInfo> getServer(String gameName, int proxiedPlayers) {
+        if (!this.getGames().contains(gameName)) return null;
+
         final @NotNull ArrayList<ServerInfo> serverList = this.getServers(gameName);
 
         final @NotNull CompletableFuture<ServerInfo> serverPingCompletableFuture = new CompletableFuture<>();
@@ -185,7 +186,7 @@ public class Matchmaker extends Plugin {
             serverInfo.ping((ServerPing serverPing, Throwable throwable) -> {
                 if (serverPing != null && throwable == null) { // This is so if one server causes an issue, the proxy will continue pinging.
                     final @NotNull ServerPing.Players players = serverPing.getPlayers();
-                    if (players.getMax() - players.getOnline() >= proxiedPlayers.size()) {
+                    if (players.getMax() - players.getOnline() >= proxiedPlayers) {
                         serverPingCompletableFuture.complete(serverInfo); // The first server to respond that can accept players will get selected.
                     }
                 }
@@ -206,12 +207,10 @@ public class Matchmaker extends Plugin {
         this.getProxy().getPluginManager().callEvent(preGameSendEvent);
         if (!preGameSendEvent.isCancelled()) {
             final @NotNull ArrayList<ProxiedPlayer> players = PartyUtil.getAffiliatedPlayers(player);
-            final @Nullable CompletableFuture<ServerInfo> targetServer = this.getServer(gameName, players);
+            final @Nullable CompletableFuture<ServerInfo> targetServer = this.getServer(gameName, players.size());
 
-            targetServer.thenApply(serverInfo -> {
-                for (ProxiedPlayer proxiedPlayer : players) {
-                    if (!serverInfo.getPlayers().contains(proxiedPlayer)) proxiedPlayer.connect(serverInfo);
-                }
+            if (targetServer != null) targetServer.thenApply(serverInfo -> {
+                PartyUtil.getLeader(player).connect(serverInfo);
 
                 return serverInfo;
             });

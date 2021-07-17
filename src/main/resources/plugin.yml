@@ -1,7 +1,7 @@
 name: Matchmaker
-main: quest.ender.Matchmaker.Matchmaker
 version: ${project.version}
+main: quest.ender.MatchmakerBukkit.MatchmakerBukkit
 author: regulad
-depends:
-  - PartyAndFriends
-description: BungeeCord plugin used to make matches on ender.quest.
+api-version: 1.13
+softdepend:
+  - PlaceholderAPI

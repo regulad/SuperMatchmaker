@@ -14,8 +14,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import quest.ender.Matchmaker.Matchmaker;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -37,18 +35,22 @@ public class ConnectionListener implements Listener {
 
             if (currentGame == null || !currentGame.equals(targetGame)) {
                 // In short: Schedule this task login.game seconds away, if either the current game is not part of a game or the current game login.game.
-                final @NotNull List<ProxiedPlayer> affectedPlayers = Collections.singletonList(postLoginEvent.getPlayer());
-                final @NotNull CompletableFuture<ServerInfo> serverInfoCompletableFuture = this.matchmaker.getServer(targetGame, affectedPlayers);
+                final @NotNull ProxiedPlayer targetPlayer = postLoginEvent.getPlayer();
+                final @NotNull CompletableFuture<ServerInfo> serverInfoCompletableFuture = this.matchmaker.getServer(targetGame, 1);
+
+                final boolean[] isMessagedSingleton = {false};
 
                 final @NotNull ScheduledTask scheduledTask = this.matchmaker.getProxy().getScheduler().schedule(this.matchmaker, () -> {
                     if (!serverInfoCompletableFuture.isDone()) {
-                        postLoginEvent.getPlayer().sendMessage(new ComponentBuilder("Couldn't find you a lobby. We are still trying...").color(ChatColor.RED).create());
+                        isMessagedSingleton[0] = true;
+                        targetPlayer.sendMessage(new ComponentBuilder("Couldn't find you a lobby. We are still trying...").color(ChatColor.RED).create());
                     }
-                }, this.matchmaker.getConfig().getLong("timeout"), this.matchmaker.getConfig().getLong("timeout") * 2, TimeUnit.MILLISECONDS); // Arbitrary.
+                }, this.matchmaker.getConfig().getLong("timeout"), this.matchmaker.getConfig().getLong("timeout") * 4, TimeUnit.MILLISECONDS); // Arbitrary.
 
                 serverInfoCompletableFuture.thenApply((targetServerInfo) -> {
                     scheduledTask.cancel();
-                    postLoginEvent.getPlayer().sendMessage(new ComponentBuilder("Found one! Sending you to " + targetServerInfo.getName() + "...").color(ChatColor.RED).create());
+                    if (isMessagedSingleton[0]) targetPlayer.sendMessage(new ComponentBuilder("Found one! Sending you to " + targetServerInfo.getName() + "...").color(ChatColor.GREEN).create());
+                    targetPlayer.connect(targetServerInfo);
 
                     return targetServerInfo;
                 });
@@ -58,13 +60,13 @@ public class ConnectionListener implements Listener {
 
     @EventHandler
     public void onPlayerKick(ServerKickEvent serverKickEvent) { // It may take too long for the fallback server to be found. That's fine, I guess?
-        final @NotNull List<ProxiedPlayer> affectedPlayers = Collections.singletonList(serverKickEvent.getPlayer());
-        final @NotNull CompletableFuture<ServerInfo> serverInfoCompletableFuture = this.matchmaker.getServer(this.matchmaker.getConfig().getString("fallback.game"), affectedPlayers);
+        final @NotNull ProxiedPlayer affectedPlayer = serverKickEvent.getPlayer();
+        final @NotNull CompletableFuture<ServerInfo> serverInfoCompletableFuture = this.matchmaker.getServer(this.matchmaker.getConfig().getString("fallback.game"), 1);
 
         serverInfoCompletableFuture.thenApply((targetServerInfo) -> {
             serverKickEvent.setCancelServer(targetServerInfo);
             serverKickEvent.setCancelled(true);
-            serverKickEvent.getPlayer().sendMessage(new ComponentBuilder(this.matchmaker.getConfig().getString("fallback.message")).create());
+            affectedPlayer.sendMessage(new ComponentBuilder(this.matchmaker.getConfig().getString("fallback.message")).create());
 
             return targetServerInfo;
         });

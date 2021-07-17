@@ -11,6 +11,7 @@ import net.md_5.bungee.api.plugin.TabExecutor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import quest.ender.Matchmaker.Matchmaker;
+import quest.ender.Matchmaker.util.PartyUtil;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -40,6 +41,8 @@ public class MakeMatchCommand extends Command implements TabExecutor {
 
             if (!sender.hasPermission(this.matchmaker.getConfig().getString("base_game_permission") + "." + gameName)) {
                 sender.sendMessage(new ComponentBuilder("You do not have the permission to join this game.").color(ChatColor.RED).create());
+            } else if (!PartyUtil.leadsParty(proxiedPlayer)) {
+                sender.sendMessage(new ComponentBuilder("Only the leader of a party can queue you for a game!").color(ChatColor.RED).create());
             } else {
                 final @Nullable CompletableFuture<ServerInfo> serverInfoCompletableFuture = this.matchmaker.sendToGame(proxiedPlayer, gameName);
 
@@ -52,7 +55,7 @@ public class MakeMatchCommand extends Command implements TabExecutor {
                     this.matchmaker.getProxy().getScheduler().schedule(this.matchmaker, () -> {
                         if (!serverInfoCompletableFuture.isDone()) {
                             serverInfoCompletableFuture.cancel(true);
-                            sender.sendMessage(new ComponentBuilder("We were unable to send you to a game.").color(ChatColor.RED).create());
+                            sender.sendMessage(new ComponentBuilder("We were unable to send you to a game. Try again later.").color(ChatColor.RED).create());
                         }
                     }, this.matchmaker.getConfig().getLong("timeout"), TimeUnit.MILLISECONDS);
                 }

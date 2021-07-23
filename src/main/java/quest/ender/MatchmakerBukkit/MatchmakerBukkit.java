@@ -3,11 +3,13 @@ package quest.ender.MatchmakerBukkit;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import quest.ender.MatchmakerBukkit.command.LocalMatchCommand;
 import quest.ender.MatchmakerBukkit.event.SentToGameEvent;
 
 import java.util.HashMap;
@@ -32,6 +34,12 @@ public class MatchmakerBukkit extends JavaPlugin implements PluginMessageListene
         if (this.getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             new quest.ender.MatchmakerBukkit.placeholder.MatchmakerExpansion(this).register();
         }
+
+        final @NotNull PluginCommand localmatchCommand = this.getCommand("localmatch");
+        final @NotNull LocalMatchCommand localMatchCommandExecutor = new LocalMatchCommand(this);
+
+        localmatchCommand.setExecutor(localMatchCommandExecutor);
+        localmatchCommand.setTabCompleter(localMatchCommandExecutor);
     }
 
     @Override

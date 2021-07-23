@@ -5,3 +5,22 @@ author: regulad
 api-version: 1.13
 softdepend:
   - PlaceholderAPI
+
+permissions:
+  matchmaker.*:
+    description: Grants all Matchmaker permissions.
+    children:
+      - matchmaker.command.*
+  matchmaker.command.*:
+    description: Grants permission to run all Matchmaker commands.
+    children:
+      - matchmaker.command.localmatch
+  matchmaker.command.localmatch:
+    description: Grants permission to run the localmatch command.
+    default: true
+
+commands:
+  localmatch:
+    permission: matchmaker.command.localmatch
+    description: Mirrors the makematch command on the proxy.
+    usage: "Usage: /<command> <server>"

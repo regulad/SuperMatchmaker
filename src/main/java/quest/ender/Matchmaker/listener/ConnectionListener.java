@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import quest.ender.Matchmaker.Matchmaker;
 
+import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -61,21 +62,32 @@ public class ConnectionListener implements Listener {
     @EventHandler
     public void onPlayerKick(ServerKickEvent serverKickEvent) { // It may take too long for the fallback server to be found. That's fine, I guess?
         final @NotNull ProxiedPlayer affectedPlayer = serverKickEvent.getPlayer();
-        final @NotNull CompletableFuture<ServerInfo> serverInfoCompletableFuture = this.matchmaker.getServer(this.matchmaker.getConfig().getString("fallback.game"), 1);
+        final @NotNull String gameName = this.matchmaker.getConfig().getString("fallback.game");
+        final @NotNull ArrayList<@NotNull ServerInfo> servers = this.matchmaker.getServers(gameName);
 
-        serverInfoCompletableFuture.thenApply((targetServerInfo) -> {
-            serverKickEvent.setCancelServer(targetServerInfo);
+        if (servers.size() == 1) {
+            serverKickEvent.setCancelServer(servers.get(0));
             serverKickEvent.setCancelled(true);
             affectedPlayer.sendMessage(new ComponentBuilder(this.matchmaker.getConfig().getString("fallback.message")).create());
+        } else {
+            final @Nullable CompletableFuture<ServerInfo> serverInfoCompletableFuture = this.matchmaker.getServer(gameName, 1);
 
-            return targetServerInfo;
-        });
+            if (serverInfoCompletableFuture != null) {
+                serverInfoCompletableFuture.thenApply((targetServerInfo) -> {
+                    serverKickEvent.setCancelServer(targetServerInfo);
+                    serverKickEvent.setCancelled(true);
+                    affectedPlayer.sendMessage(new ComponentBuilder(this.matchmaker.getConfig().getString("fallback.message")).create());
 
-        this.matchmaker.getProxy().getScheduler().schedule(this.matchmaker, () -> {
-            if (!serverInfoCompletableFuture.isDone()) {
-                serverInfoCompletableFuture.cancel(true);
-                serverKickEvent.setKickReasonComponent(new ComponentBuilder("Failed to find a fallback server when an issue occurred on your current server: ").color(ChatColor.RED).append(serverKickEvent.getKickReasonComponent()).create());
+                    return targetServerInfo;
+                });
+
+                this.matchmaker.getProxy().getScheduler().schedule(this.matchmaker, () -> {
+                    if (!serverInfoCompletableFuture.isDone()) {
+                        serverInfoCompletableFuture.cancel(true);
+                        serverKickEvent.setKickReasonComponent(new ComponentBuilder("Failed to find a fallback server when an issue occurred on your current server: ").color(ChatColor.RED).append(serverKickEvent.getKickReasonComponent()).create());
+                    }
+                }, this.matchmaker.getConfig().getLong("timeout"), TimeUnit.MILLISECONDS);
             }
-        }, this.matchmaker.getConfig().getLong("timeout"), TimeUnit.MILLISECONDS);
+        }
     }
 }

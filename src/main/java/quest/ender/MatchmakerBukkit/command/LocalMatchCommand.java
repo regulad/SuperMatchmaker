@@ -1,5 +1,7 @@
 package quest.ender.MatchmakerBukkit.command;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -15,33 +17,32 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-public class LocalMatchCommand implements CommandExecutor, TabCompleter {
+public final class LocalMatchCommand implements CommandExecutor, TabCompleter {
     private final @NotNull MatchmakerBukkit matchmakerBukkit;
     private @Nullable CompletableFuture<@NotNull String> gameList = null;
 
-    public LocalMatchCommand(@NotNull MatchmakerBukkit matchmakerBukkit) {
+    public LocalMatchCommand(final @NotNull MatchmakerBukkit matchmakerBukkit) {
         this.matchmakerBukkit = matchmakerBukkit;
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage("Only players may execute this command.");
+    public boolean onCommand(final @NotNull CommandSender sender, final @NotNull Command command, final @NotNull String label, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Component.text("Only players may execute this command."));
             return false;
         } else if (args.length != 1) {
-            sender.sendMessage("This command only excepts one argument, the game name.");
+            sender.sendMessage(Component.text("This command only excepts one argument, the game name."));
             return false;
         } else {
-            final @NotNull Player player = (Player) sender;
             final @NotNull String gameName = args[0];
 
             final @Nullable CompletableFuture<@NotNull String> serverInfoCompletableFuture = this.matchmakerBukkit.sendToGame(player, gameName);
 
             serverInfoCompletableFuture.thenApply((targetServer) -> {
                 if (!targetServer.equals("null")) {
-                    sender.sendMessage("Sent you to " + targetServer + ".");
+                    sender.sendMessage(Component.text("Sent you to " + targetServer + ".").color(TextColor.color(5635925)));
                 } else {
-                    sender.sendMessage("We were unable to send you to a game. Try again later.");
+                    sender.sendMessage(Component.text("We were unable to send you to a game. Try again later.").color(TextColor.color(16733525)));
                 }
                 return targetServer;
             });
@@ -51,9 +52,8 @@ public class LocalMatchCommand implements CommandExecutor, TabCompleter {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (sender instanceof Player) {
-            final @NotNull Player playerSender = (Player) sender;
+    public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, String[] args) {
+        if (sender instanceof final @NotNull Player playerSender) {
             if (this.gameList == null) this.gameList = this.matchmakerBukkit.getGames(playerSender);
 
             if (!this.gameList.isDone()) {

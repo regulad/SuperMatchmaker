@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 public class PluginMessageListener implements Listener {
     private final @NotNull Matchmaker matchmaker;
 
-    public PluginMessageListener(Matchmaker matchmaker) {
+    public PluginMessageListener(final @NotNull Matchmaker matchmaker) {
         this.matchmaker = matchmaker;
     }
 
@@ -30,20 +30,15 @@ public class PluginMessageListener implements Listener {
             final @NotNull ServerInfo serverInfo = proxiedPlayer.getServer().getInfo();
 
             switch (inputStream.readUTF()) {
-                case "GetGames":
+                case "GetGames" -> {
                     final @NotNull ByteArrayDataOutput getGamesOutput = ByteStreams.newDataOutput();
-
                     getGamesOutput.writeUTF("GetGames");
                     getGamesOutput.writeUTF(String.join(", ", this.matchmaker.getGames()));
-
                     serverInfo.sendData("matchmaker:in", getGamesOutput.toByteArray());
-
-                    break;
-                case "SendToGame":
+                }
+                case "SendToGame" -> {
                     final @NotNull String gameToSend = inputStream.readUTF();
-
                     final @Nullable CompletableFuture<ServerInfo> serverInfoCompletableFuture = this.matchmaker.sendToGame(proxiedPlayer, gameToSend);
-
                     if (serverInfoCompletableFuture != null) {
                         serverInfoCompletableFuture.thenApply((targetServerInfo) -> {
                             final @NotNull ByteArrayDataOutput sendGameOutput = ByteStreams.newDataOutput();
@@ -76,29 +71,22 @@ public class PluginMessageListener implements Listener {
 
                         serverInfo.sendData("matchmaker:in", sendGameOutput.toByteArray());
                     }
-
-                    break;
-                case "GetGame":
+                }
+                case "GetGame" -> {
                     final @Nullable String currentGame = this.matchmaker.getGame(serverInfo);
-
                     final @Nullable ByteArrayDataOutput getGameOutput = ByteStreams.newDataOutput();
                     getGameOutput.writeUTF("GetGame");
                     getGameOutput.writeUTF(currentGame != null ? currentGame : "null");
-
                     serverInfo.sendData("matchmaker:in", getGameOutput.toByteArray());
-
-                    break;
-                case "GetGameStats":
+                }
+                case "GetGameStats" -> {
                     final @NotNull String gameForStats = inputStream.readUTF();
-
                     final @NotNull ByteArrayDataOutput gameStatsOutput = ByteStreams.newDataOutput();
                     gameStatsOutput.writeUTF("GetGameStats");
                     gameStatsOutput.writeUTF(gameForStats);
                     gameStatsOutput.writeUTF(String.valueOf(this.matchmaker.getGamePlayerCount(gameForStats)));
-
                     serverInfo.sendData("matchmaker:in", gameStatsOutput.toByteArray());
-
-                    break;
+                }
             }
         }
     }

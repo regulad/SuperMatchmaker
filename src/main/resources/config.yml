@@ -6,15 +6,15 @@ commands:
   makematch:
     name: makematch
     permission: matchmaker.command.makematch
-    aliases: [makemeamatch]
+    aliases: [ makemeamatch ]
   lobby:
     name: lobby
     permission: matchmaker.command.lobby
-    aliases: [l, hub]
+    aliases: [ l, hub ]
   mmreload:
     name: mmreload
     permission: matchmaker.command.mmreload
-    aliases: []
+    aliases: [ ]
 
 base_game_permission: matchmaker.game # This is permission used to check if the player can access the game.
 # Example: matchmaker.game.lobby

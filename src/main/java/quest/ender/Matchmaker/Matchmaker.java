@@ -10,10 +10,11 @@ import net.md_5.bungee.api.plugin.PluginManager;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
+import org.bstats.bungeecord.Metrics;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import quest.ender.Matchmaker.command.MakeMatchCommand;
 import quest.ender.Matchmaker.command.LobbyCommand;
+import quest.ender.Matchmaker.command.MakeMatchCommand;
 import quest.ender.Matchmaker.command.ReloadCommand;
 import quest.ender.Matchmaker.events.PreGameSendEvent;
 import quest.ender.Matchmaker.handler.ForcedServerReconnectHandler;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class Matchmaker extends Plugin {
+    private @Nullable Metrics metrics = null;
     private @Nullable Configuration configuration = null;
 
     @Override
@@ -54,6 +56,8 @@ public class Matchmaker extends Plugin {
         final @Nullable ServerInfo forcedServer = this.getProxy().getServerInfo(this.getConfig().getString("login.holding"));
 
         if (forcedServer != null) this.getProxy().setReconnectHandler(new ForcedServerReconnectHandler(forcedServer));
+
+        this.metrics = new Metrics(this, 12215);
     }
 
     @Override
@@ -66,6 +70,8 @@ public class Matchmaker extends Plugin {
         final @NotNull PluginManager pluginManager = proxyServer.getPluginManager();
         pluginManager.unregisterCommands(this);
         pluginManager.unregisterListeners(this);
+
+        this.metrics = null; // Should I just let it GC?
     }
 
     public void saveDefaultConfig() {
@@ -172,10 +178,10 @@ public class Matchmaker extends Plugin {
     /**
      * Get a {@link ServerInfo} capable of receiving the proxiedPlayers. This may take as long as a second, since it has to ping servers.
      *
-     * @deprecated in favor of {@link Matchmaker#getServer(String, int, ProxiedPlayer)}.
      * @param gameName       The name of the game, in {@link String} form.
      * @param proxiedPlayers The number of players the server must accept.
      * @return A future that returns a {@link ServerInfo} that must accommodate players. If no servers are found, the future will not complete. This is only valid in the instant that is received, since the state of the server may change. (i.e. a player joining, putting the server over it's limit)
+     * @deprecated in favor of {@link Matchmaker#getServer(String, int, ProxiedPlayer)}.
      */
     public @Nullable CompletableFuture<ServerInfo> getServer(final @NotNull String gameName, int proxiedPlayers) {
         return this.getServer(gameName, proxiedPlayers, null);
@@ -196,7 +202,8 @@ public class Matchmaker extends Plugin {
 
         final @NotNull CompletableFuture<ServerInfo> serverPingCompletableFuture = new CompletableFuture<>();
         for (final @NotNull ServerInfo serverInfo : serverList) {
-            if (targetPlayer != null && serverInfo.getPlayers().contains(targetPlayer)) continue; // The player is here, lets move on.
+            if (targetPlayer != null && serverInfo.getPlayers().contains(targetPlayer))
+                continue; // The player is here, lets move on.
 
             serverInfo.ping((final @Nullable ServerPing serverPing, final @Nullable Throwable throwable) -> {
                 if (serverPing != null && throwable == null) { // This is so if one server causes an issue, the proxy will continue pinging.

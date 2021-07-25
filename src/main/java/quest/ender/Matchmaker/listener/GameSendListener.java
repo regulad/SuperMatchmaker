@@ -10,13 +10,14 @@ import quest.ender.Matchmaker.Matchmaker;
 import quest.ender.Matchmaker.events.GameSendFailureEvent;
 import quest.ender.Matchmaker.events.GameSendSuccessEvent;
 import quest.ender.Matchmaker.events.PreGameSendEvent;
+import quest.ender.Matchmaker.util.PartyUtil;
 
 import java.util.ArrayList;
 
 public class GameSendListener implements Listener {
     private final @NotNull Matchmaker matchmaker;
 
-    public GameSendListener(Matchmaker matchmaker) {
+    public GameSendListener(final @NotNull Matchmaker matchmaker) {
         this.matchmaker = matchmaker;
     }
 
@@ -26,6 +27,12 @@ public class GameSendListener implements Listener {
         if (baseGamePermission.length() > 0 && !preGameSendEvent.getTargetPlayer().hasPermission(baseGamePermission + "." + preGameSendEvent.getTargetGame()))
             preGameSendEvent.setCancelled(true);
         // Cancel the event if the config has a value for base_game_permission and the player does not have it.
+    }
+
+    @EventHandler
+    public void checkIfLeader(final @NotNull PreGameSendEvent preGameSendEvent) {
+        if (!PartyUtil.leadsParty(preGameSendEvent.getTargetPlayer()))
+            preGameSendEvent.setCancelled(true); // Player is not the leader of the party, we can move on.
     }
 
     @EventHandler

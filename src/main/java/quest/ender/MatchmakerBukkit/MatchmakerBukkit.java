@@ -3,6 +3,7 @@ package quest.ender.MatchmakerBukkit;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -20,11 +21,12 @@ import java.util.concurrent.CompletableFuture;
 /**
  * The Bukkit extension of Matchmaker is an API middleman.
  */
-public class MatchmakerBukkit extends JavaPlugin implements PluginMessageListener {
-    final @NotNull HashMap<@NotNull Player, @NotNull CompletableFuture<@NotNull String>> sendToGameFutures = new HashMap<>();
-    final @NotNull HashMap<@NotNull String, @NotNull CompletableFuture<@NotNull String>> getGameStatsFutures = new HashMap<>();
-    final @NotNull LinkedList<@NotNull CompletableFuture<@NotNull String>> getGameFutures = new LinkedList<>();
-    final @NotNull LinkedList<@NotNull CompletableFuture<@NotNull String>> getGamesFutures = new LinkedList<>();
+public final class MatchmakerBukkit extends JavaPlugin implements PluginMessageListener {
+    private final @NotNull Metrics metrics = new Metrics(this, 12214);
+    private final @NotNull HashMap<@NotNull Player, @NotNull CompletableFuture<@NotNull String>> sendToGameFutures = new HashMap<>();
+    private final @NotNull HashMap<@NotNull String, @NotNull CompletableFuture<@NotNull String>> getGameStatsFutures = new HashMap<>();
+    private final @NotNull LinkedList<@NotNull CompletableFuture<@NotNull String>> getGameFutures = new LinkedList<>();
+    private final @NotNull LinkedList<@NotNull CompletableFuture<@NotNull String>> getGamesFutures = new LinkedList<>();
 
     @Override
     public void onEnable() {
@@ -37,7 +39,6 @@ public class MatchmakerBukkit extends JavaPlugin implements PluginMessageListene
 
         final @NotNull PluginCommand localmatchCommand = this.getCommand("localmatch");
         final @NotNull LocalMatchCommand localMatchCommandExecutor = new LocalMatchCommand(this);
-
         localmatchCommand.setExecutor(localMatchCommandExecutor);
         localmatchCommand.setTabCompleter(localMatchCommandExecutor);
     }
@@ -53,53 +54,42 @@ public class MatchmakerBukkit extends JavaPlugin implements PluginMessageListene
         if (channel.equals("matchmaker:in")) {
             final @NotNull ByteArrayDataInput byteArrayDataInput = ByteStreams.newDataInput(message);
             switch (byteArrayDataInput.readUTF()) {
-                case "SendToGame":
-                    final @NotNull Player playerSent = this.getServer().getPlayer(byteArrayDataInput.readUTF());
+                case "SendToGame" -> {
+                    final @Nullable Player playerSent = this.getServer().getPlayer(byteArrayDataInput.readUTF());
                     final @Nullable CompletableFuture<@NotNull String> sendToGameCompletableFuture = this.sendToGameFutures.remove(playerSent);
-
                     if (sendToGameCompletableFuture != null) {
                         sendToGameCompletableFuture.complete(byteArrayDataInput.readUTF());
                     }
-
-                    break;
-                case "GetGameStats":
+                }
+                case "GetGameStats" -> {
                     final @Nullable CompletableFuture<@NotNull String> getGameStatsCompletableFuture = this.getGameStatsFutures.remove(byteArrayDataInput.readUTF());
-
                     if (getGameStatsCompletableFuture != null) {
                         getGameStatsCompletableFuture.complete(byteArrayDataInput.readUTF());
                     }
-
-                    break;
-                case "GetGame":
+                }
+                case "GetGame" -> {
                     @Nullable CompletableFuture<@NotNull String> getGameFuture;
                     try {
                         getGameFuture = this.getGameFutures.pop();
                     } catch (NoSuchElementException noSuchElementException) {
                         getGameFuture = null;
                     }
-
                     if (getGameFuture != null) {
                         getGameFuture.complete(byteArrayDataInput.readUTF());
                     }
-
-                    break;
-                case "GetGames":
+                }
+                case "GetGames" -> {
                     @Nullable CompletableFuture<@NotNull String> getGamesFuture;
                     try {
                         getGamesFuture = this.getGamesFutures.pop();
                     } catch (NoSuchElementException noSuchElementException) {
                         getGamesFuture = null;
                     }
-
                     if (getGamesFuture != null) {
                         getGamesFuture.complete(byteArrayDataInput.readUTF());
                     }
-
-                    break;
-                case "SentToGame":
-                    this.getServer().getPluginManager().callEvent(new SentToGameEvent(byteArrayDataInput.readUTF()));
-
-                    break;
+                }
+                case "SentToGame" -> this.getServer().getPluginManager().callEvent(new SentToGameEvent(byteArrayDataInput.readUTF()));
             }
         }
     }

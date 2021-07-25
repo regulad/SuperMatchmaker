@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class ConnectionListener implements Listener {
     private final @NotNull Matchmaker matchmaker;
 
-    public ConnectionListener(Matchmaker matchmaker) {
+    public ConnectionListener(final @NotNull Matchmaker matchmaker) {
         this.matchmaker = matchmaker;
     }
 
@@ -51,7 +51,8 @@ public class ConnectionListener implements Listener {
 
                     serverInfoCompletableFuture.thenApply((targetServerInfo) -> {
                         scheduledTask.cancel();
-                        if (isMessagedSingleton[0]) targetPlayer.sendMessage(new ComponentBuilder("Found one! Sending you to " + targetServerInfo.getName() + "...").color(ChatColor.GREEN).create());
+                        if (isMessagedSingleton[0])
+                            targetPlayer.sendMessage(new ComponentBuilder("Found one! Sending you to " + targetServerInfo.getName() + "...").color(ChatColor.GREEN).create());
                         targetPlayer.connect(targetServerInfo);
 
                         return targetServerInfo;

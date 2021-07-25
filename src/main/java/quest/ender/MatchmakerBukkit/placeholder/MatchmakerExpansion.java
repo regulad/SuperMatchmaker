@@ -31,17 +31,17 @@ public class MatchmakerExpansion extends PlaceholderExpansion implements Taskabl
     }
 
     @Override
-    public String getIdentifier() {
+    public @NotNull String getIdentifier() {
         return "matchmaker";
     }
 
     @Override
-    public String getAuthor() {
+    public @NotNull String getAuthor() {
         return "regulad";
     }
 
     @Override
-    public String getVersion() {
+    public @NotNull String getVersion() {
         return "${project.version}";
     }
 
@@ -124,7 +124,7 @@ public class MatchmakerExpansion extends PlaceholderExpansion implements Taskabl
 
     @Override
     public void start() {
-        this.bukkitRunnable.runTaskTimerAsynchronously(this.matchmakerBukkit, 12000L, 12000L); // Should be safe to run async. I see no reason why not. It will take like, a microsecond anyway.
+        this.bukkitRunnable.runTaskTimerAsynchronously(this.matchmakerBukkit, 2400L, 2400L); // Should be safe to run async. I see no reason why not. It will take like, a microsecond anyway.
     }
 
     @Override

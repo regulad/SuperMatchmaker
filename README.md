@@ -46,7 +46,7 @@ Data will be sent on `matchmaker:out`, and data will be received on `matchmaker:
 * Subchannel `SendToGame`
     * Data `Name of a game.`
         * Returns `Name of the game that the player was sent to. If it fails, return the string "null".`
-            Please note that this task may take a while to return.
+          Please note that this task may take a while to return.
 * Subchannel `GetGameStats`
     * Data `Name of a game.`
         * Returns `Name of the game that data was requested on.`
@@ -57,5 +57,6 @@ Data will be sent on `matchmaker:out`, and data will be received on `matchmaker:
     * Returns `A list of all games the server can connect you to, seperated by a ,`
 * Subchannel `SentToGame`
     * Data `name of the game`
-        * This message will be dispatched when a player joins the server via Matchmaker. May be multiple seperated by a `, `. Note that only one message will be sent a server, and the player used to send it may be disregarded.
+        * This message will be dispatched when a player joins the server via Matchmaker. May be multiple seperated by
+          a `, `. Note that only one message will be sent a server, and the player used to send it may be disregarded.
     

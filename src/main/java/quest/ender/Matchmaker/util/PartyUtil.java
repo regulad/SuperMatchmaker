@@ -13,13 +13,16 @@ import java.util.ArrayList;
  * A collection of utilities for {@link PlayerParty}ies.
  */
 public class PartyUtil {
+    private PartyUtil() {
+    }
+
     /**
      * Gets all players actively affiliated with a player, via a {@link PlayerParty}.
      *
      * @param player The target {@link ProxiedPlayer}.
      * @return An {@link ArrayList} of players that are affiliated with the player. This includes the player.
      */
-    public static @NotNull ArrayList<ProxiedPlayer> getAffiliatedPlayers(ProxiedPlayer player) {
+    public static @NotNull ArrayList<ProxiedPlayer> getAffiliatedPlayers(final @NotNull ProxiedPlayer player) {
         final @NotNull OnlinePAFPlayer onlinePAFPlayer = PAFPlayerManager.getInstance().getPlayer(player);
         final @Nullable PlayerParty playerParty = onlinePAFPlayer.getParty();
         final @NotNull ArrayList<ProxiedPlayer> proxiedPlayers = new ArrayList<>();
@@ -39,7 +42,7 @@ public class PartyUtil {
      * @param player The {@link ProxiedPlayer} in question.
      * @return The {@link ProxiedPlayer} that leads {@code player}'s party. If {@code player} is not in a party, return {@code player}.
      */
-    public static @NotNull ProxiedPlayer getLeader(ProxiedPlayer player) {
+    public static @NotNull ProxiedPlayer getLeader(final @NotNull ProxiedPlayer player) {
         final @NotNull OnlinePAFPlayer onlinePAFPlayer = PAFPlayerManager.getInstance().getPlayer(player);
         final @Nullable PlayerParty playerParty = onlinePAFPlayer.getParty();
 
@@ -52,10 +55,11 @@ public class PartyUtil {
 
     /**
      * Sees if a {@link ProxiedPlayer} is the leader of a party.
+     *
      * @param player The {@link ProxiedPlayer} in question.
      * @return {@code true} if the player is not in a party or is the leader, else {@code false}.
      */
-    public static boolean leadsParty(ProxiedPlayer player) {
+    public static boolean leadsParty(final @NotNull ProxiedPlayer player) {
         final @NotNull OnlinePAFPlayer onlinePAFPlayer = PAFPlayerManager.getInstance().getPlayer(player);
         final @Nullable PlayerParty playerParty = onlinePAFPlayer.getParty();
 

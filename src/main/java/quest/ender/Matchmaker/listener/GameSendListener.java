@@ -9,18 +9,27 @@ import org.jetbrains.annotations.NotNull;
 import quest.ender.Matchmaker.Matchmaker;
 import quest.ender.Matchmaker.events.GameSendFailureEvent;
 import quest.ender.Matchmaker.events.GameSendSuccessEvent;
+import quest.ender.Matchmaker.events.PreGameSendEvent;
 
 import java.util.ArrayList;
 
 public class GameSendListener implements Listener {
-    private final Matchmaker matchmaker;
+    private final @NotNull Matchmaker matchmaker;
 
     public GameSendListener(Matchmaker matchmaker) {
         this.matchmaker = matchmaker;
     }
 
     @EventHandler
-    public void onGameSuccess(GameSendSuccessEvent gameSendSuccessEvent) {
+    public void checkForPermissions(final @NotNull PreGameSendEvent preGameSendEvent) {
+        final @NotNull String baseGamePermission = this.matchmaker.getConfig().getString("base_game_permission");
+        if (baseGamePermission.length() > 0 && !preGameSendEvent.getTargetPlayer().hasPermission(baseGamePermission + "." + preGameSendEvent.getTargetGame()))
+            preGameSendEvent.setCancelled(true);
+        // Cancel the event if the config has a value for base_game_permission and the player does not have it.
+    }
+
+    @EventHandler
+    public void onGameSuccess(final @NotNull GameSendSuccessEvent gameSendSuccessEvent) {
         final @NotNull ArrayList<String> displayNameList = new ArrayList<>();
         for (ProxiedPlayer proxiedPlayer : gameSendSuccessEvent.getMovedPlayers()) {
             displayNameList.add(proxiedPlayer.getDisplayName());
@@ -39,7 +48,7 @@ public class GameSendListener implements Listener {
     }
 
     @EventHandler
-    public void onSendFailure(GameSendFailureEvent gameSendFailureEvent) {
+    public void onSendFailure(final @NotNull GameSendFailureEvent gameSendFailureEvent) {
         this.matchmaker.getLogger().warning(gameSendFailureEvent.getTargetPlayer().getDisplayName() + " couldn't connect to the game " + gameSendFailureEvent.getTargetGame() + " because of " + gameSendFailureEvent.getReason().getClass().getName());
         gameSendFailureEvent.getReason().printStackTrace();
     }

@@ -16,14 +16,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public class PluginMessageListener implements Listener {
-    private final Matchmaker matchmaker;
+    private final @NotNull Matchmaker matchmaker;
 
     public PluginMessageListener(Matchmaker matchmaker) {
         this.matchmaker = matchmaker;
     }
 
     @EventHandler
-    public void onPluginMessage(PluginMessageEvent event) {
+    public void onPluginMessage(final @NotNull PluginMessageEvent event) {
         if (event.getTag().equalsIgnoreCase("matchmaker:out")) {
             final @NotNull ByteArrayDataInput inputStream = ByteStreams.newDataInput(event.getData());
             final @NotNull ProxiedPlayer proxiedPlayer = this.matchmaker.getProxy().getPlayer(event.getReceiver().toString());

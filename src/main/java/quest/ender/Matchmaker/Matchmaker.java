@@ -172,18 +172,33 @@ public class Matchmaker extends Plugin {
     /**
      * Get a {@link ServerInfo} capable of receiving the proxiedPlayers. This may take as long as a second, since it has to ping servers.
      *
+     * @deprecated in favor of {@link Matchmaker#getServer(String, int, ProxiedPlayer)}.
      * @param gameName       The name of the game, in {@link String} form.
      * @param proxiedPlayers The number of players the server must accept.
      * @return A future that returns a {@link ServerInfo} that must accommodate players. If no servers are found, the future will not complete. This is only valid in the instant that is received, since the state of the server may change. (i.e. a player joining, putting the server over it's limit)
      */
-    public @Nullable CompletableFuture<ServerInfo> getServer(String gameName, int proxiedPlayers) {
+    public @Nullable CompletableFuture<ServerInfo> getServer(final @NotNull String gameName, int proxiedPlayers) {
+        return this.getServer(gameName, proxiedPlayers, null);
+    }
+
+    /**
+     * Get a {@link ServerInfo} capable of receiving the proxiedPlayers. This may take as long as a second, since it has to ping servers.
+     *
+     * @param gameName       The name of the game, in {@link String} form.
+     * @param proxiedPlayers The number of players the server must accept.
+     * @param targetPlayer   The player to test for in the server. Optional, may be null.
+     * @return A future that returns a {@link ServerInfo} that must accommodate players. If no servers are found, the future will not complete. This is only valid in the instant that is received, since the state of the server may change. (i.e. a player joining, putting the server over it's limit)
+     */
+    public @Nullable CompletableFuture<ServerInfo> getServer(final @NotNull String gameName, int proxiedPlayers, final @Nullable ProxiedPlayer targetPlayer) {
         if (!this.getGames().contains(gameName)) return null;
 
         final @NotNull ArrayList<ServerInfo> serverList = this.getServers(gameName);
 
         final @NotNull CompletableFuture<ServerInfo> serverPingCompletableFuture = new CompletableFuture<>();
-        for (ServerInfo serverInfo : serverList) {
-            serverInfo.ping((ServerPing serverPing, Throwable throwable) -> {
+        for (final @NotNull ServerInfo serverInfo : serverList) {
+            if (targetPlayer != null && serverInfo.getPlayers().contains(targetPlayer)) continue; // The player is here, lets move on.
+
+            serverInfo.ping((final @Nullable ServerPing serverPing, final @Nullable Throwable throwable) -> {
                 if (serverPing != null && throwable == null) { // This is so if one server causes an issue, the proxy will continue pinging.
                     final @NotNull ServerPing.Players players = serverPing.getPlayers();
                     if (players.getMax() - players.getOnline() >= proxiedPlayers) {
@@ -202,12 +217,12 @@ public class Matchmaker extends Plugin {
      * @param player   The {@link ProxiedPlayer} to be sent to the game.
      * @param gameName The name of a game, in {@link String} form.
      */
-    public @Nullable CompletableFuture<ServerInfo> sendToGame(ProxiedPlayer player, String gameName) {
+    public @Nullable CompletableFuture<ServerInfo> sendToGame(final @NotNull ProxiedPlayer player, final @NotNull String gameName) {
         final @NotNull PreGameSendEvent preGameSendEvent = new PreGameSendEvent(player, gameName);
         this.getProxy().getPluginManager().callEvent(preGameSendEvent);
         if (!preGameSendEvent.isCancelled()) {
             final @NotNull ArrayList<ProxiedPlayer> players = PartyUtil.getAffiliatedPlayers(player);
-            final @Nullable CompletableFuture<ServerInfo> targetServer = this.getServer(gameName, players.size());
+            final @Nullable CompletableFuture<ServerInfo> targetServer = this.getServer(gameName, players.size(), PartyUtil.getLeader(player));
 
             if (targetServer != null) targetServer.thenApply(serverInfo -> {
                 PartyUtil.getLeader(player).connect(serverInfo);

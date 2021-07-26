@@ -1,27 +1,29 @@
 package quest.ender.Matchmaker.events;
 
 import net.md_5.bungee.api.connection.ProxiedPlayer;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class GameSendFailureEvent extends GameSendEvent {
-    private final Throwable reason;
-    private final ProxiedPlayer targetPlayer;
-    private final String targetGame;
+    private final @Nullable Throwable reason;
+    private final @NotNull ProxiedPlayer targetPlayer;
+    private final @NotNull String targetGame;
 
-    public GameSendFailureEvent(ProxiedPlayer targetPlayer, String targetGame, Throwable reason) {
+    public GameSendFailureEvent(@NotNull ProxiedPlayer targetPlayer, @NotNull String targetGame, @Nullable Throwable reason) {
         this.targetPlayer = targetPlayer;
         this.targetGame = targetGame;
         this.reason = reason;
     }
 
-    public Throwable getReason() {
+    public @Nullable Throwable getReason() {
         return this.reason;
     }
 
-    public ProxiedPlayer getTargetPlayer() {
+    public @NotNull ProxiedPlayer getTargetPlayer() {
         return this.targetPlayer;
     }
 
-    public String getTargetGame() {
+    public @NotNull String getTargetGame() {
         return this.targetGame;
     }
 }

@@ -6,6 +6,7 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import quest.ender.Matchmaker.Matchmaker;
 import quest.ender.Matchmaker.events.GameSendFailureEvent;
 import quest.ender.Matchmaker.events.GameSendSuccessEvent;
@@ -42,21 +43,28 @@ public class GameSendListener implements Listener {
             displayNameList.add(proxiedPlayer.getDisplayName());
         }
 
-        if (gameSendSuccessEvent.getTargetServer().getPlayers().size() > 0) {
+        gameSendSuccessEvent.getConnectionFuture().thenApply(result -> {
             final @NotNull ByteArrayDataOutput byteArrayDataOutput = ByteStreams.newDataOutput();
 
             byteArrayDataOutput.writeUTF("SentToGame");
             byteArrayDataOutput.writeUTF(String.join(", ", displayNameList));
+            byteArrayDataOutput.writeUTF(gameSendSuccessEvent.getTargetGame());
 
             gameSendSuccessEvent.getTargetServer().sendData("matchmaker:in", byteArrayDataOutput.toByteArray());
-        }
+
+            return result;
+        });
 
         this.matchmaker.getLogger().info(String.join(", ", displayNameList) + " connected to " + gameSendSuccessEvent.getTargetServer().getName() + " for " + this.matchmaker.getGame(gameSendSuccessEvent.getTargetServer()));
     }
 
     @EventHandler
     public void onSendFailure(final @NotNull GameSendFailureEvent gameSendFailureEvent) {
-        this.matchmaker.getLogger().warning(gameSendFailureEvent.getTargetPlayer().getDisplayName() + " couldn't connect to the game " + gameSendFailureEvent.getTargetGame() + " because of " + gameSendFailureEvent.getReason().getClass().getName());
+        final @Nullable Throwable throwableReason = gameSendFailureEvent.getReason();
+        if (throwableReason != null)
+            this.matchmaker.getLogger().warning(gameSendFailureEvent.getTargetPlayer().getDisplayName() + " couldn't connect to the game " + gameSendFailureEvent.getTargetGame() + " because of " + gameSendFailureEvent.getReason().getClass().getName() + ".");
+        else
+            this.matchmaker.getLogger().warning(gameSendFailureEvent.getTargetPlayer().getDisplayName() + " couldn't connect to the game " + gameSendFailureEvent.getTargetGame() + ".");
         gameSendFailureEvent.getReason().printStackTrace();
     }
 }

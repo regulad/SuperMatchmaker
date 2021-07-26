@@ -12,10 +12,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import quest.ender.MatchmakerBukkit.command.LocalMatchCommand;
 import quest.ender.MatchmakerBukkit.event.SentToGameEvent;
+import quest.ender.MatchmakerBukkit.listener.SentToGameListener;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.NoSuchElementException;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -32,6 +31,8 @@ public final class MatchmakerBukkit extends JavaPlugin implements PluginMessageL
     public void onEnable() {
         this.getServer().getMessenger().registerOutgoingPluginChannel(this, "matchmaker:out");
         this.getServer().getMessenger().registerIncomingPluginChannel(this, "matchmaker:in", this);
+
+        this.getServer().getPluginManager().registerEvents(new SentToGameListener(this), this);
 
         if (this.getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             new quest.ender.MatchmakerBukkit.placeholder.MatchmakerExpansion(this).register();
@@ -89,7 +90,18 @@ public final class MatchmakerBukkit extends JavaPlugin implements PluginMessageL
                         getGamesFuture.complete(byteArrayDataInput.readUTF());
                     }
                 }
-                case "SentToGame" -> this.getServer().getPluginManager().callEvent(new SentToGameEvent(byteArrayDataInput.readUTF()));
+                case "SentToGame" -> {
+                    final @NotNull ArrayList<@NotNull Player> playerArrayList = new ArrayList<>();
+                    final @NotNull String[] playerNames = byteArrayDataInput.readUTF().split(", ");
+
+                    for (final @NotNull String playerName : playerNames) {
+                        final @Nullable Player realPlayer = this.getServer().getPlayer(playerName);
+                        if (realPlayer != null)
+                            playerArrayList.add(realPlayer);
+                    }
+
+                    this.getServer().getPluginManager().callEvent(new SentToGameEvent(playerArrayList, byteArrayDataInput.readUTF()));
+                }
             }
         }
     }

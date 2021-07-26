@@ -16,12 +16,16 @@ import org.jetbrains.annotations.Nullable;
 import quest.ender.Matchmaker.command.LobbyCommand;
 import quest.ender.Matchmaker.command.MakeMatchCommand;
 import quest.ender.Matchmaker.command.ReloadCommand;
+import quest.ender.Matchmaker.events.GameSendEvent;
+import quest.ender.Matchmaker.events.GameSendFailureEvent;
+import quest.ender.Matchmaker.events.GameSendSuccessEvent;
 import quest.ender.Matchmaker.events.PreGameSendEvent;
 import quest.ender.Matchmaker.handler.ForcedServerReconnectHandler;
 import quest.ender.Matchmaker.listener.ConnectionListener;
 import quest.ender.Matchmaker.listener.GameSendListener;
 import quest.ender.Matchmaker.listener.PluginMessageListener;
 import quest.ender.Matchmaker.util.PartyUtil;
+import quest.ender.Matchmaker.util.PlayerUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -231,11 +235,14 @@ public class Matchmaker extends Plugin {
             final @NotNull ArrayList<ProxiedPlayer> players = PartyUtil.getAffiliatedPlayers(player);
             final @Nullable CompletableFuture<ServerInfo> targetServer = this.getServer(gameName, players.size(), PartyUtil.getLeader(player));
 
-            if (targetServer != null) targetServer.thenApply(serverInfo -> {
-                PartyUtil.getLeader(player).connect(serverInfo);
+            if (targetServer != null)
+                targetServer.thenApply(serverInfo -> {;
+                    this.getProxy().getPluginManager().callEvent(new GameSendSuccessEvent(players, serverInfo, gameName, PlayerUtil.sendPlayerFuture(PartyUtil.getLeader(player), serverInfo)));
 
-                return serverInfo;
-            });
+                    return serverInfo;
+                });
+            else
+                this.getProxy().getPluginManager().callEvent(new GameSendFailureEvent(player, gameName, null));
 
             return targetServer;
         }

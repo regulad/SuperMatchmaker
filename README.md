@@ -14,8 +14,8 @@ For the repository:
 <repositories>
     ...
     <repository>
-        <id>regulad-releases</id>
-        <url>https://nexus.regulad.xyz/repository/maven-releases/</url>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
     </repository>
     ...
 </repositories>

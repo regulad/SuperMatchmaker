@@ -3,6 +3,8 @@ name: Matchmaker CI
 on:
   create:
   push:
+    tags:
+      - '*'
     branches: [ master ]
   pull_request:
     branches: [ master ]

@@ -8,6 +8,20 @@ Matchmaker is a BungeeCord plugin used to make matches on [ender.quest](https://
 
 Insert the following snippets into your POM.xml.
 
+For the repository:
+
+```xml
+<repositories>
+    ...
+    <repository>
+        <id>github</id>
+        <name>GitHub Packages</name>
+        <url>https://maven.pkg.github.com/EnderQuestMC/Matchmaker</url>
+    </repository>
+    ...
+</repositories>
+```
+
 For the dependency:
 
 ```xml

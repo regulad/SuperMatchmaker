@@ -14,8 +14,9 @@ For the repository:
 <repositories>
     ...
     <repository>
-        <id>jitpack.io</id>
-        <url>https://jitpack.io</url>
+        <id>github</id>
+        <name>GitHub Packages</name>
+        <url>https://maven.pkg.github.com/EnderQuestMC/Matchmaker</url>
     </repository>
     ...
 </repositories>
@@ -28,7 +29,7 @@ For the dependency:
     ...
     <dependency>
         <groupId>quest.ender</groupId>
-        <artifactId>Matchmaker</artifactId>
+        <artifactId>matchmaker</artifactId>
         <version>{version}</version>
     </dependency>
     ...

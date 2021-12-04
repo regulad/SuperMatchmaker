@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>quest.ender</groupId>
-    <artifactId>Matchmaker</artifactId>
+    <artifactId>matchmaker</artifactId>
     <version>1.3.2</version>
     <packaging>jar</packaging>
     <name>Matchmaker</name>
@@ -91,6 +91,13 @@
             </plugin>
         </plugins>
     </build>
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/EnderQuestMC/Matchmaker</url>
+        </repository>
+    </distributionManagement>
     <repositories>
         <repository>
             <id>papermc</id>

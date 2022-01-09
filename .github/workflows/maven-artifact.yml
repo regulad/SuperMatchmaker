@@ -4,13 +4,13 @@
 name: Java CI with Maven and Artifact
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - "*"
     branches: [ master ]
   pull_request:
     branches: [ master ]
-
 jobs:
   build:
     runs-on: ubuntu-latest

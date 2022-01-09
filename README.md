@@ -17,7 +17,7 @@ For the repository:
     <repository>
         <id>github</id>
         <name>GitHub Packages</name>
-        <url>https://maven.pkg.github.com/EnderQuestMC/Matchmaker</url>
+        <url>https://maven.pkg.github.com/regulad/Matchmaker</url>
     </repository>
     ...
 </repositories>

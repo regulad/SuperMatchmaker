@@ -112,7 +112,6 @@
         <module>dist</module>
         <module>spigot</module>
         <module>bungee</module>
-        <module>velocity</module>
     </modules>
 
     <dependencies>

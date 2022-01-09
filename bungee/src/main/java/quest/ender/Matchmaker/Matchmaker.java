@@ -16,7 +16,6 @@ import org.jetbrains.annotations.Nullable;
 import quest.ender.Matchmaker.command.LobbyCommand;
 import quest.ender.Matchmaker.command.MakeMatchCommand;
 import quest.ender.Matchmaker.command.ReloadCommand;
-import quest.ender.Matchmaker.events.GameSendEvent;
 import quest.ender.Matchmaker.events.GameSendFailureEvent;
 import quest.ender.Matchmaker.events.GameSendSuccessEvent;
 import quest.ender.Matchmaker.events.PreGameSendEvent;
@@ -236,7 +235,8 @@ public class Matchmaker extends Plugin {
             final @Nullable CompletableFuture<ServerInfo> targetServer = this.getServer(gameName, players.size(), PartyUtil.getLeader(player));
 
             if (targetServer != null)
-                targetServer.thenApply(serverInfo -> {;
+                targetServer.thenApply(serverInfo -> {
+                    ;
                     this.getProxy().getPluginManager().callEvent(new GameSendSuccessEvent(players, serverInfo, gameName, PlayerUtil.sendPlayerFuture(PartyUtil.getLeader(player), serverInfo)));
 
                     return serverInfo;

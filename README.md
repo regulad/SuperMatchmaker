@@ -1,6 +1,6 @@
 # Matchmaker
 
-Matchmaker is a BungeeCord plugin used to make matches on [ender.quest](https://www.ender.quest).
+Matchmaker is a cross-platform matchmaking plugin for Waterfall, Velocity, and PaperSpigot>=1.8.8.
 
 ## Developers
 
@@ -11,6 +11,7 @@ Insert the following snippets into your POM.xml.
 For the repository:
 
 ```xml
+
 <repositories>
     ...
     <repository>
@@ -25,11 +26,12 @@ For the repository:
 For the dependency:
 
 ```xml
+
 <dependencies>
     ...
     <dependency>
         <groupId>quest.ender</groupId>
-        <artifactId>matchmaker</artifactId>
+        <artifactId>common</artifactId>
         <version>{version}</version>
     </dependency>
     ...
@@ -38,7 +40,9 @@ For the dependency:
 
 Replace `{version}` with the current version. You can see the current version below. Don't include the "v".
 
-![Current Version](https://img.shields.io/github/v/release/EnderQuestMC/Matchmaker)
+![Current Version](https://img.shields.io/github/v/release/regulad/Matchmaker)
+
+The name of the plugin on all platforms except Velocity is `Matchmaker`, as opposed to `supermatchmaker` on Velocity.
 
 ### Messages
 

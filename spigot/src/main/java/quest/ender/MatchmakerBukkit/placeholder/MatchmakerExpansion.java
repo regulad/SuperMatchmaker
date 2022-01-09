@@ -32,17 +32,17 @@ public class MatchmakerExpansion extends PlaceholderExpansion implements Taskabl
 
     @Override
     public @NotNull String getIdentifier() {
-        return "matchmaker";
+        return this.matchmakerBukkit.getDescription().getName().toLowerCase();
     }
 
     @Override
     public @NotNull String getAuthor() {
-        return "regulad";
+        return String.join(", ", this.matchmakerBukkit.getDescription().getAuthors());
     }
 
     @Override
     public @NotNull String getVersion() {
-        return "${project.version}";
+        return this.matchmakerBukkit.getDescription().getVersion();
     }
 
     @Override
@@ -129,6 +129,7 @@ public class MatchmakerExpansion extends PlaceholderExpansion implements Taskabl
 
     @Override
     public void stop() {
-        if (!this.bukkitRunnable.isCancelled()) this.bukkitRunnable.cancel();
+        if (this.matchmakerBukkit.getServer().getScheduler().isCurrentlyRunning(this.bukkitRunnable.getTaskId()))
+            this.bukkitRunnable.cancel();
     }
 }

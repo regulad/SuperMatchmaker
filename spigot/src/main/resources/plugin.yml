@@ -2,7 +2,7 @@ name: Matchmaker
 version: ${project.version}
 main: quest.ender.MatchmakerBukkit.MatchmakerBukkit
 author: regulad
-api-version: 1.16
+api-version: 1.13
 softdepend:
   - PlaceholderAPI
 

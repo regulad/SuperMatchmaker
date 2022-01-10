@@ -23,8 +23,10 @@ import quest.ender.Matchmaker.handler.ForcedServerReconnectHandler;
 import quest.ender.Matchmaker.listener.ConnectionListener;
 import quest.ender.Matchmaker.listener.GameSendListener;
 import quest.ender.Matchmaker.listener.PluginMessageListener;
+import quest.ender.Matchmaker.util.BungeePlayerUtil;
 import quest.ender.Matchmaker.util.PartyUtil;
-import quest.ender.Matchmaker.util.PlayerUtil;
+import xyz.regulad.supermatchmaker.api.Channels;
+import xyz.regulad.supermatchmaker.api.MatchmakerAPI;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,20 +35,23 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-public class Matchmaker extends Plugin {
+public class Matchmaker extends Plugin implements MatchmakerAPI {
     private @Nullable Metrics metrics = null;
     private @Nullable Configuration configuration = null;
 
     @Override
     public void onEnable() {
+        MatchmakerAPI.setInstance(this);
+
         if (this.getConfig() == null) this.saveDefaultConfig();
 
         if (this.getConfig() == null) this.getLogger().warning("Couldn't load configuration!");
 
-        this.getProxy().registerChannel("matchmaker:in");
-        this.getProxy().registerChannel("matchmaker:out");
+        this.getProxy().registerChannel(Channels.TO_BACKEND_CHANNEL);
+        this.getProxy().registerChannel(Channels.TO_PROXY_CHANNEL);
 
         this.getProxy().getPluginManager().registerCommand(this, new MakeMatchCommand(this, this.getConfig().getString("commands.makematch.name"), this.getConfig().getString("commands.makematch.permission"), Iterables.toArray(this.getConfig().getStringList("commands.makematch.aliases"), String.class)));
         this.getProxy().getPluginManager().registerCommand(this, new LobbyCommand(this, this.getConfig().getString("commands.lobby.name"), this.getConfig().getString("commands.lobby.permission"), Iterables.toArray(this.getConfig().getStringList("commands.lobby.aliases"), String.class)));
@@ -65,10 +70,12 @@ public class Matchmaker extends Plugin {
 
     @Override
     public void onDisable() {
+        MatchmakerAPI.setInstance(null);
+
         final @NotNull ProxyServer proxyServer = this.getProxy();
 
-        proxyServer.unregisterChannel("matchmaker:in");
-        proxyServer.unregisterChannel("matchmaker:out");
+        proxyServer.unregisterChannel(Channels.TO_PROXY_CHANNEL);
+        proxyServer.unregisterChannel(Channels.TO_BACKEND_CHANNEL);
 
         final @NotNull PluginManager pluginManager = proxyServer.getPluginManager();
         pluginManager.unregisterCommands(this);
@@ -125,8 +132,13 @@ public class Matchmaker extends Plugin {
      *
      * @return A {@link Collection} of games. Not all of these games may be valid, since some may not have servers attached.
      */
-    public @NotNull Collection<String> getGames() {
+    public @NotNull Collection<String> getGamesInstantly() {
         return this.getConfig().getSection("games").getKeys();
+    }
+
+    @Override
+    public @NotNull CompletableFuture<@NotNull Collection<@NotNull String>> getGames() {
+        return CompletableFuture.completedFuture(this.getGamesInstantly());
     }
 
     /**
@@ -147,6 +159,12 @@ public class Matchmaker extends Plugin {
         return validServers;
     }
 
+    @Override
+    public @Nullable CompletableFuture<@NotNull String> getGame(@NotNull UUID player) {
+        final @Nullable ProxiedPlayer proxiedPlayer = this.getProxy().getPlayer(player);
+        return proxiedPlayer != null ? CompletableFuture.completedFuture(this.getGame(proxiedPlayer.getServer().getInfo())) : null;
+    }
+
     /**
      * Gets the game a {@link ServerInfo} is affiliated with.
      *
@@ -154,7 +172,7 @@ public class Matchmaker extends Plugin {
      * @return A game, in {@link String} form. May be null if the serverInfo is not part of a game.
      */
     public @Nullable String getGame(ServerInfo serverInfo) {
-        for (String game : this.getGames()) {
+        for (String game : this.getGamesInstantly()) {
             for (ServerInfo compare : this.getServers(game)) {
                 if (compare.equals(serverInfo)) return game;
             }
@@ -168,7 +186,17 @@ public class Matchmaker extends Plugin {
      * @param gameName The name of the game, in {@link String} form.
      * @return An {@link Integer} value of how many players are on servers hosting the gameName. May be 0 if the game does not exist or no servers are hosting it.
      */
-    public int getGamePlayerCount(String gameName) {
+    public @NotNull CompletableFuture<@NotNull Integer> getGamePlayerCount(@NotNull String gameName) {
+        int playerCount = 0;
+
+        for (ServerInfo serverInfo : this.getServers(gameName)) {
+            playerCount += serverInfo.getPlayers().size(); // May be inaccurate, but way more efficient.
+        }
+
+        return CompletableFuture.completedFuture(playerCount);
+    }
+
+    public int getGamePlayerCountInstantly(final @NotNull String gameName) {
         int playerCount = 0;
 
         for (ServerInfo serverInfo : this.getServers(gameName)) {
@@ -199,7 +227,7 @@ public class Matchmaker extends Plugin {
      * @return A future that returns a {@link ServerInfo} that must accommodate players. If no servers are found, the future will not complete. This is only valid in the instant that is received, since the state of the server may change. (i.e. a player joining, putting the server over it's limit)
      */
     public @Nullable CompletableFuture<ServerInfo> getServer(final @NotNull String gameName, int proxiedPlayers, final @Nullable ProxiedPlayer targetPlayer) {
-        if (!this.getGames().contains(gameName)) return null;
+        if (!this.getGamesInstantly().contains(gameName)) return null;
 
         final @NotNull ArrayList<ServerInfo> serverList = this.getServers(gameName);
 
@@ -221,6 +249,21 @@ public class Matchmaker extends Plugin {
         return serverPingCompletableFuture;
     }
 
+    @Override
+    public @Nullable CompletableFuture<@NotNull String> sendToGame(final @NotNull UUID player, final @NotNull String gameName) {
+        final @NotNull CompletableFuture<@NotNull String> wrappedFuture = new CompletableFuture<>();
+        final @Nullable ProxiedPlayer proxiedPlayer = this.getProxy().getPlayer(player);
+        final @Nullable CompletableFuture<ServerInfo> unwrappedFuture = proxiedPlayer != null ? this.sendToGame(proxiedPlayer, gameName) : null;
+        if (unwrappedFuture != null) {
+            unwrappedFuture.thenApply(serverInfo -> {
+                wrappedFuture.complete(serverInfo.getName());
+
+                return serverInfo;
+            });
+        }
+        return wrappedFuture;
+    }
+
     /**
      * Sends a player or party to a game. Broadcasts events, and may be cancelled by them.
      *
@@ -237,7 +280,7 @@ public class Matchmaker extends Plugin {
             if (targetServer != null)
                 targetServer.thenApply(serverInfo -> {
                     ;
-                    this.getProxy().getPluginManager().callEvent(new GameSendSuccessEvent(players, serverInfo, gameName, PlayerUtil.sendPlayerFuture(PartyUtil.getLeader(player), serverInfo)));
+                    this.getProxy().getPluginManager().callEvent(new GameSendSuccessEvent(players, serverInfo, gameName, BungeePlayerUtil.sendPlayerFuture(PartyUtil.getLeader(player), serverInfo)));
 
                     return serverInfo;
                 });

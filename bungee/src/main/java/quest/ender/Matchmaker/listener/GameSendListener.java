@@ -12,6 +12,7 @@ import quest.ender.Matchmaker.events.GameSendFailureEvent;
 import quest.ender.Matchmaker.events.GameSendSuccessEvent;
 import quest.ender.Matchmaker.events.PreGameSendEvent;
 import quest.ender.Matchmaker.util.PartyUtil;
+import xyz.regulad.supermatchmaker.api.Channels;
 
 import java.util.ArrayList;
 
@@ -50,7 +51,7 @@ public class GameSendListener implements Listener {
             byteArrayDataOutput.writeUTF(String.join(", ", displayNameList));
             byteArrayDataOutput.writeUTF(gameSendSuccessEvent.getTargetGame());
 
-            gameSendSuccessEvent.getTargetServer().sendData("matchmaker:in", byteArrayDataOutput.toByteArray());
+            gameSendSuccessEvent.getTargetServer().sendData(Channels.TO_BACKEND_CHANNEL, byteArrayDataOutput.toByteArray());
 
             return result;
         });

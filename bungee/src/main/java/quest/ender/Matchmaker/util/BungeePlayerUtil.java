@@ -9,8 +9,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
 
-public final class PlayerUtil {
-    private PlayerUtil() {
+public final class BungeePlayerUtil {
+    private BungeePlayerUtil() {
     }
 
     @Contract(pure = true)

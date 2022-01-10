@@ -61,7 +61,7 @@ public class MakeMatchCommand extends Command implements TabExecutor {
     @Override
     public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
         return switch (args.length) {
-            case 1 -> this.matchmaker.getGames();
+            case 1 -> this.matchmaker.getGamesInstantly();
             default -> null;
         };
     }

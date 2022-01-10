@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import quest.ender.MatchmakerBukkit.MatchmakerBukkit;
 
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -21,7 +21,7 @@ import java.util.concurrent.ExecutionException;
 
 public final class LocalMatchCommand implements CommandExecutor, TabCompleter {
     private final @NotNull MatchmakerBukkit matchmakerBukkit;
-    private @Nullable CompletableFuture<@NotNull String> gameList = null;
+    private @Nullable CompletableFuture<@NotNull Collection<@NotNull String>> gameList = null;
 
     public LocalMatchCommand(final @NotNull MatchmakerBukkit matchmakerBukkit) {
         this.matchmakerBukkit = matchmakerBukkit;
@@ -72,7 +72,7 @@ public final class LocalMatchCommand implements CommandExecutor, TabCompleter {
                 return Collections.singletonList("Waiting...");
             } else {
                 try {
-                    return Arrays.asList(this.gameList.get().split(", "));
+                    return (List<String>) this.gameList.get();
                 } catch (ExecutionException | InterruptedException exception) {
                     exception.printStackTrace();
                     return Collections.singletonList("Error!");

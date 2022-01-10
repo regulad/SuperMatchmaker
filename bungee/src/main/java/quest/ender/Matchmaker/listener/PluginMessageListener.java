@@ -11,6 +11,7 @@ import net.md_5.bungee.event.EventHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import quest.ender.Matchmaker.Matchmaker;
+import xyz.regulad.supermatchmaker.api.Channels;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -24,7 +25,7 @@ public class PluginMessageListener implements Listener {
 
     @EventHandler
     public void onPluginMessage(final @NotNull PluginMessageEvent event) {
-        if (event.getTag().equalsIgnoreCase("matchmaker:out")) {
+        if (event.getTag().equalsIgnoreCase(Channels.TO_PROXY_CHANNEL)) {
             final @NotNull ByteArrayDataInput inputStream = ByteStreams.newDataInput(event.getData());
             final @NotNull ProxiedPlayer proxiedPlayer = this.matchmaker.getProxy().getPlayer(event.getReceiver().toString());
             final @NotNull ServerInfo serverInfo = proxiedPlayer.getServer().getInfo();
@@ -33,8 +34,8 @@ public class PluginMessageListener implements Listener {
                 case "GetGames" -> {
                     final @NotNull ByteArrayDataOutput getGamesOutput = ByteStreams.newDataOutput();
                     getGamesOutput.writeUTF("GetGames");
-                    getGamesOutput.writeUTF(String.join(", ", this.matchmaker.getGames()));
-                    serverInfo.sendData("matchmaker:in", getGamesOutput.toByteArray());
+                    getGamesOutput.writeUTF(String.join(", ", this.matchmaker.getGamesInstantly()));
+                    serverInfo.sendData(Channels.TO_BACKEND_CHANNEL, getGamesOutput.toByteArray());
                 }
                 case "SendToGame" -> {
                     final @NotNull String gameToSend = inputStream.readUTF();
@@ -46,7 +47,7 @@ public class PluginMessageListener implements Listener {
                             sendGameOutput.writeUTF(proxiedPlayer.getDisplayName());
                             sendGameOutput.writeUTF(targetServerInfo.getName());
 
-                            serverInfo.sendData("matchmaker:in", sendGameOutput.toByteArray());
+                            serverInfo.sendData(Channels.TO_BACKEND_CHANNEL, sendGameOutput.toByteArray());
 
                             return targetServerInfo;
                         });
@@ -59,7 +60,7 @@ public class PluginMessageListener implements Listener {
                                 sendGameOutput.writeUTF(proxiedPlayer.getDisplayName());
                                 sendGameOutput.writeUTF("null");
 
-                                serverInfo.sendData("matchmaker:in", sendGameOutput.toByteArray());
+                                serverInfo.sendData(Channels.TO_BACKEND_CHANNEL, sendGameOutput.toByteArray());
                             }
                         }, this.matchmaker.getConfig().getLong("timeout"), TimeUnit.MILLISECONDS);
                         // A timeout of sorts.
@@ -69,7 +70,7 @@ public class PluginMessageListener implements Listener {
                         sendGameOutput.writeUTF(proxiedPlayer.getDisplayName());
                         sendGameOutput.writeUTF("null");
 
-                        serverInfo.sendData("matchmaker:in", sendGameOutput.toByteArray());
+                        serverInfo.sendData(Channels.TO_BACKEND_CHANNEL, sendGameOutput.toByteArray());
                     }
                 }
                 case "GetGame" -> {
@@ -77,15 +78,15 @@ public class PluginMessageListener implements Listener {
                     final @Nullable ByteArrayDataOutput getGameOutput = ByteStreams.newDataOutput();
                     getGameOutput.writeUTF("GetGame");
                     getGameOutput.writeUTF(currentGame != null ? currentGame : "null");
-                    serverInfo.sendData("matchmaker:in", getGameOutput.toByteArray());
+                    serverInfo.sendData(Channels.TO_BACKEND_CHANNEL, getGameOutput.toByteArray());
                 }
                 case "GetGameStats" -> {
                     final @NotNull String gameForStats = inputStream.readUTF();
                     final @NotNull ByteArrayDataOutput gameStatsOutput = ByteStreams.newDataOutput();
                     gameStatsOutput.writeUTF("GetGameStats");
                     gameStatsOutput.writeUTF(gameForStats);
-                    gameStatsOutput.writeUTF(String.valueOf(this.matchmaker.getGamePlayerCount(gameForStats)));
-                    serverInfo.sendData("matchmaker:in", gameStatsOutput.toByteArray());
+                    gameStatsOutput.writeUTF(String.valueOf(this.matchmaker.getGamePlayerCountInstantly(gameForStats)));
+                    serverInfo.sendData(Channels.TO_BACKEND_CHANNEL, gameStatsOutput.toByteArray());
                 }
             }
         }

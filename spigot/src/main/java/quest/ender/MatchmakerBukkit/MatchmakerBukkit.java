@@ -15,29 +15,31 @@ import org.jetbrains.annotations.Nullable;
 import quest.ender.MatchmakerBukkit.command.LocalMatchCommand;
 import quest.ender.MatchmakerBukkit.event.SentToGameEvent;
 import quest.ender.MatchmakerBukkit.listener.SentToGameListener;
+import xyz.regulad.supermatchmaker.api.Channels;
+import xyz.regulad.supermatchmaker.api.MatchmakerAPI;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.NoSuchElementException;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The Bukkit extension of Matchmaker is an API middleman.
  */
-public final class MatchmakerBukkit extends JavaPlugin implements PluginMessageListener {
+public final class MatchmakerBukkit extends JavaPlugin implements PluginMessageListener, MatchmakerAPI {
     private final @NotNull Metrics metrics = new Metrics(this, 12214);
-    private final @NotNull HashMap<@NotNull Player, @NotNull CompletableFuture<@NotNull String>> sendToGameFutures = new HashMap<>();
-    private final @NotNull HashMap<@NotNull String, @NotNull CompletableFuture<@NotNull String>> getGameStatsFutures = new HashMap<>();
+    private final @NotNull ConcurrentHashMap<@NotNull Player, @NotNull CompletableFuture<@NotNull String>> sendToGameFutures = new ConcurrentHashMap<>(64);
+    private final @NotNull ConcurrentHashMap<@NotNull String, @NotNull CompletableFuture<@NotNull Integer>> getGameStatsFutures = new ConcurrentHashMap<>(64);
     private final @NotNull LinkedList<@NotNull CompletableFuture<@NotNull String>> getGameFutures = new LinkedList<>();
-    private final @NotNull LinkedList<@NotNull CompletableFuture<@NotNull String>> getGamesFutures = new LinkedList<>();
+    private final @NotNull LinkedList<@NotNull CompletableFuture<@NotNull Collection<@NotNull String>>> getGamesFutures = new LinkedList<>();
     @Getter
     private @Nullable BukkitAudiences bukkitAudiences;
 
     @Override
     public void onEnable() {
-        this.getServer().getMessenger().registerOutgoingPluginChannel(this, "matchmaker:out");
-        this.getServer().getMessenger().registerIncomingPluginChannel(this, "matchmaker:in", this);
+        MatchmakerAPI.setInstance(this);
+
+        this.getServer().getMessenger().registerOutgoingPluginChannel(this, Channels.TO_PROXY_CHANNEL);
+        this.getServer().getMessenger().registerIncomingPluginChannel(this, Channels.TO_BACKEND_CHANNEL, this);
 
         this.getServer().getPluginManager().registerEvents(new SentToGameListener(this), this);
 
@@ -55,28 +57,30 @@ public final class MatchmakerBukkit extends JavaPlugin implements PluginMessageL
 
     @Override
     public void onDisable() {
-        this.getServer().getMessenger().unregisterOutgoingPluginChannel(this, "matchmaker:out");
-        this.getServer().getMessenger().unregisterIncomingPluginChannel(this, "matchmaker:in", this);
+        MatchmakerAPI.setInstance(null);
+
+        this.getServer().getMessenger().unregisterOutgoingPluginChannel(this, Channels.TO_PROXY_CHANNEL);
+        this.getServer().getMessenger().unregisterIncomingPluginChannel(this, Channels.TO_BACKEND_CHANNEL, this);
 
         this.bukkitAudiences = null;
     }
 
     @Override
     public void onPluginMessageReceived(@NotNull String channel, @NotNull Player player, byte[] message) {
-        if (channel.equals("matchmaker:in")) {
+        if (channel.equals(Channels.TO_BACKEND_CHANNEL)) {
             final @NotNull ByteArrayDataInput byteArrayDataInput = ByteStreams.newDataInput(message);
             switch (byteArrayDataInput.readUTF()) {
                 case "SendToGame":
                     final @Nullable Player playerSent = this.getServer().getPlayer(byteArrayDataInput.readUTF());
-                    final @Nullable CompletableFuture<@NotNull String> sendToGameCompletableFuture = this.sendToGameFutures.remove(playerSent);
+                    final @Nullable CompletableFuture<@NotNull String> sendToGameCompletableFuture = playerSent != null ? this.sendToGameFutures.remove(playerSent) : null;
                     if (sendToGameCompletableFuture != null) {
                         sendToGameCompletableFuture.complete(byteArrayDataInput.readUTF());
                     }
                     break;
                 case "GetGameStats":
-                    final @Nullable CompletableFuture<@NotNull String> getGameStatsCompletableFuture = this.getGameStatsFutures.remove(byteArrayDataInput.readUTF());
+                    final @Nullable CompletableFuture<@NotNull Integer> getGameStatsCompletableFuture = this.getGameStatsFutures.remove(byteArrayDataInput.readUTF());
                     if (getGameStatsCompletableFuture != null) {
-                        getGameStatsCompletableFuture.complete(byteArrayDataInput.readUTF());
+                        getGameStatsCompletableFuture.complete(Integer.parseInt(byteArrayDataInput.readUTF()));
                     }
                     break;
                 case "GetGame":
@@ -91,14 +95,14 @@ public final class MatchmakerBukkit extends JavaPlugin implements PluginMessageL
                     }
                     break;
                 case "GetGames":
-                    @Nullable CompletableFuture<@NotNull String> getGamesFuture;
+                    @Nullable CompletableFuture<@NotNull Collection<@NotNull String>> getGamesFuture;
                     try {
                         getGamesFuture = this.getGamesFutures.pop();
                     } catch (NoSuchElementException noSuchElementException) {
                         getGamesFuture = null;
                     }
                     if (getGamesFuture != null) {
-                        getGamesFuture.complete(byteArrayDataInput.readUTF());
+                        getGamesFuture.complete(Arrays.asList(byteArrayDataInput.readUTF().split(", ")));
                     }
                     break;
                 case "SentToGame":
@@ -117,7 +121,13 @@ public final class MatchmakerBukkit extends JavaPlugin implements PluginMessageL
         }
     }
 
-    public @NotNull CompletableFuture<@NotNull String> sendToGame(@NotNull Player player, @NotNull String gameName) {
+    @Override
+    public @Nullable CompletableFuture<@NotNull String> sendToGame(final @NotNull UUID player, final @NotNull String gameName) {
+        final @Nullable Player bukkitPlayer = this.getServer().getPlayer(player);
+        return bukkitPlayer != null ? this.sendToGame(bukkitPlayer, gameName) : null;
+    }
+
+    public @NotNull CompletableFuture<@NotNull String> sendToGame(final @NotNull Player player, final @NotNull String gameName) {
         final @NotNull CompletableFuture<@NotNull String> completableFuture = new CompletableFuture<>();
 
         this.sendToGameFutures.put(player, completableFuture);
@@ -127,13 +137,19 @@ public final class MatchmakerBukkit extends JavaPlugin implements PluginMessageL
         byteArrayDataOutput.writeUTF("SendToGame");
         byteArrayDataOutput.writeUTF(gameName);
 
-        player.sendPluginMessage(this, "matchmaker:out", byteArrayDataOutput.toByteArray());
+        player.sendPluginMessage(this, Channels.TO_PROXY_CHANNEL, byteArrayDataOutput.toByteArray());
 
         return completableFuture;
     }
 
-    public @NotNull CompletableFuture<@NotNull String> getGameStats(@NotNull Player player, @NotNull String gameName) {
-        final @NotNull CompletableFuture<@NotNull String> completableFuture = new CompletableFuture<>();
+    @Override
+    public @Nullable CompletableFuture<@NotNull Integer> getGamePlayerCount(@NotNull String gameName) {
+        final @Nullable Player carrier = this.getServer().getOnlinePlayers().stream().findFirst().orElse(null);
+        return carrier != null ? this.getGamePlayerCount(carrier, gameName) : null;
+    }
+
+    public @NotNull CompletableFuture<@NotNull Integer> getGamePlayerCount(final @NotNull Player player, final @NotNull String gameName) {
+        final @NotNull CompletableFuture<@NotNull Integer> completableFuture = new CompletableFuture<>();
 
         this.getGameStatsFutures.put(gameName, completableFuture);
 
@@ -142,12 +158,18 @@ public final class MatchmakerBukkit extends JavaPlugin implements PluginMessageL
         byteArrayDataOutput.writeUTF("GetGameStats");
         byteArrayDataOutput.writeUTF(gameName);
 
-        player.sendPluginMessage(this, "matchmaker:out", byteArrayDataOutput.toByteArray());
+        player.sendPluginMessage(this, Channels.TO_PROXY_CHANNEL, byteArrayDataOutput.toByteArray());
 
         return completableFuture;
     }
 
-    public @NotNull CompletableFuture<@NotNull String> getGame(@NotNull Player player) {
+    @Override
+    public @Nullable CompletableFuture<@NotNull String> getGame(final @NotNull UUID player) {
+        final @Nullable Player bukkitPlayer = this.getServer().getPlayer(player);
+        return bukkitPlayer != null ? this.getGame(bukkitPlayer) : null;
+    }
+
+    public @NotNull CompletableFuture<@NotNull String> getGame(final @NotNull Player player) {
         final @NotNull CompletableFuture<@NotNull String> completableFuture = new CompletableFuture<>();
 
         this.getGameFutures.push(completableFuture);
@@ -156,13 +178,19 @@ public final class MatchmakerBukkit extends JavaPlugin implements PluginMessageL
 
         byteArrayDataOutput.writeUTF("GetGame");
 
-        player.sendPluginMessage(this, "matchmaker:out", byteArrayDataOutput.toByteArray());
+        player.sendPluginMessage(this, Channels.TO_PROXY_CHANNEL, byteArrayDataOutput.toByteArray());
 
         return completableFuture;
     }
 
-    public @NotNull CompletableFuture<@NotNull String> getGames(@NotNull Player player) {
-        final @NotNull CompletableFuture<@NotNull String> completableFuture = new CompletableFuture<>();
+    @Override
+    public @Nullable CompletableFuture<@NotNull Collection<@NotNull String>> getGames() {
+        final @Nullable Player carrier = this.getServer().getOnlinePlayers().stream().findFirst().orElse(null);
+        return carrier != null ? this.getGames(carrier) : null;
+    }
+
+    public @NotNull CompletableFuture<@NotNull Collection<@NotNull String>> getGames(final @NotNull Player player) {
+        final @NotNull CompletableFuture<@NotNull Collection<@NotNull String>> completableFuture = new CompletableFuture<>();
 
         this.getGamesFutures.push(completableFuture);
 
@@ -170,7 +198,7 @@ public final class MatchmakerBukkit extends JavaPlugin implements PluginMessageL
 
         byteArrayDataOutput.writeUTF("GetGames");
 
-        player.sendPluginMessage(this, "matchmaker:out", byteArrayDataOutput.toByteArray());
+        player.sendPluginMessage(this, Channels.TO_PROXY_CHANNEL, byteArrayDataOutput.toByteArray());
 
         return completableFuture;
     }

@@ -8,15 +8,16 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import quest.ender.MatchmakerBukkit.MatchmakerBukkit;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 public class MatchmakerExpansion extends PlaceholderExpansion implements Taskable {
     private final @NotNull MatchmakerBukkit matchmakerBukkit;
-    private final @NotNull HashMap<@NotNull String, @NotNull CompletableFuture<@NotNull String>> gameStatFutures = new HashMap<>();
+    private final @NotNull HashMap<@NotNull String, @NotNull CompletableFuture<@NotNull Integer>> gameStatFutures = new HashMap<>();
     private @Nullable CompletableFuture<@NotNull String> currentGameFuture = null;
-    private @Nullable CompletableFuture<@NotNull String> allGamesFuture = null;
+    private @Nullable CompletableFuture<@NotNull Collection<@NotNull String>> allGamesFuture = null;
     private final @NotNull BukkitRunnable bukkitRunnable = new BukkitRunnable() { // Clears the "cache" so any changes may be recorded.
         @Override
         public void run() {
@@ -78,13 +79,15 @@ public class MatchmakerExpansion extends PlaceholderExpansion implements Taskabl
             if (game == null) {
                 return "Waiting on something else...";
             } else {
-                final @NotNull CompletableFuture<@NotNull String> statsCompletableFuture = this.gameStatFutures.computeIfAbsent(game, k -> this.matchmakerBukkit.getGameStats(player, k));
+                final @NotNull CompletableFuture<@NotNull Integer> statsCompletableFuture = this.gameStatFutures.computeIfAbsent(
+                        game, k -> this.matchmakerBukkit.getGamePlayerCount(player, k)
+                );
 
                 if (!statsCompletableFuture.isDone()) {
                     return "Waiting...";
                 } else {
                     try {
-                        return statsCompletableFuture.get();
+                        return String.valueOf(statsCompletableFuture.get());
                     } catch (ExecutionException | InterruptedException exception) {
                         exception.printStackTrace();
                         return "Error!";
@@ -111,7 +114,7 @@ public class MatchmakerExpansion extends PlaceholderExpansion implements Taskabl
                 return "Waiting...";
             } else {
                 try {
-                    return this.allGamesFuture.get();
+                    return String.join(", ", this.allGamesFuture.get());
                 } catch (ExecutionException | InterruptedException exception) {
                     exception.printStackTrace();
                     return "Error!";

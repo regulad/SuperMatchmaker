@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * The Bukkit extension of Matchmaker is an API middleman.
  */
 public final class MatchmakerBukkit extends JavaPlugin implements PluginMessageListener, MatchmakerAPI {
-    private final @NotNull Metrics metrics = new Metrics(this, 12214);
+    private final @NotNull Metrics metrics = new Metrics(this, 13907);
     private final @NotNull ConcurrentHashMap<@NotNull Player, @NotNull CompletableFuture<@NotNull String>> sendToGameFutures = new ConcurrentHashMap<>(64);
     private final @NotNull ConcurrentHashMap<@NotNull String, @NotNull CompletableFuture<@NotNull Integer>> getGameStatsFutures = new ConcurrentHashMap<>(64);
     private final @NotNull LinkedList<@NotNull CompletableFuture<@NotNull String>> getGameFutures = new LinkedList<>();

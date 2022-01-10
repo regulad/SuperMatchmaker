@@ -65,7 +65,7 @@ public class Matchmaker extends Plugin implements MatchmakerAPI {
 
         if (forcedServer != null) this.getProxy().setReconnectHandler(new ForcedServerReconnectHandler(forcedServer));
 
-        this.metrics = new Metrics(this, 12215);
+        this.metrics = new Metrics(this, 13908);
     }
 
     @Override

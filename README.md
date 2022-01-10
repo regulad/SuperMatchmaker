@@ -2,7 +2,7 @@
 
 SuperMatchmaker is a cross-platform matchmaking plugin for Waterfall and PaperSpigot>=1.8.8.
 
-Velocity and Glowstone support coming soon.
+Velocity, Glowstone and Sponge support coming soon.
 
 ## Developers
 
@@ -44,18 +44,18 @@ Replace `{version}` with the current version. You can see the current version be
 
 ![Current Version](https://img.shields.io/github/v/release/regulad/Matchmaker)
 
-The name of the plugin on all platforms except Velocity is `Matchmaker`, as opposed to `supermatchmaker` on Velocity.
+The name of the plugin on PaperSpigot and Waterfall is `Matchmaker` for compatability reasons. On any and all other platforms, it is simply `SuperMatchmaker`
 
 ### API Usage
 
 ```java
-MatchmakerAPI api=MatchmakerAPI.getInstance();
+MatchmakerAPI api = MatchmakerAPI.getInstance();
 
-        CompletableFuture<Collection<String>>games=api.getGames();
+CompletableFuture<Collection<String>> games = api.getGames();
 
-        games.thenApply((gameCollection)->{
-        for(String game:gameCollection){
+games.thenApply((gameCollection) -> {
+    for(String game : gameCollection){
         System.out.println(game);
-        }
-        });
+    }
+});
 ```

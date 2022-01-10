@@ -160,7 +160,7 @@ public class Matchmaker extends Plugin implements MatchmakerAPI {
     }
 
     @Override
-    public @Nullable CompletableFuture<@NotNull String> getGame(@NotNull UUID player) {
+    public @Nullable CompletableFuture<@Nullable String> getGame(@NotNull UUID player) {
         final @Nullable ProxiedPlayer proxiedPlayer = this.getProxy().getPlayer(player);
         return proxiedPlayer != null ? CompletableFuture.completedFuture(this.getGame(proxiedPlayer.getServer().getInfo())) : null;
     }

@@ -42,7 +42,7 @@ public interface MatchmakerAPI {
      * @param player The {@link UUID} of the player to get the game of.
      * @return The name of the game in a future.
      */
-    @Nullable CompletableFuture<@NotNull String> getGame(final @NotNull UUID player);
+    @Nullable CompletableFuture<@Nullable String> getGame(final @NotNull UUID player);
 
     /**
      * Gets the amount of players current on servers hosting a game. On a server implementation, this may not be completed instantly, and this may be {@code null} if the server cannot a carrier to deliver the message.

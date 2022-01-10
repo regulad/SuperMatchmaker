@@ -3,6 +3,8 @@ package xyz.regulad.supermatchmaker.velocity;
 import com.google.inject.Inject;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
+import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -12,6 +14,7 @@ import ninja.leaping.configurate.yaml.YAMLConfigurationLoader;
 import org.bstats.velocity.Metrics;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import xyz.regulad.supermatchmaker.api.MatchmakerAPI;
 import xyz.regulad.supermatchmaker.velocity.api.VelocityAPI;
 
 import java.io.File;
@@ -19,6 +22,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
 // fixme
@@ -26,19 +32,24 @@ import java.util.logging.Logger;
         id = "supermatchmaker",
         name = "SuperMatchmaker",
         version = "1.4.0-SNAPSHOT",
+        url = "https://github.com/regulad/SuperMatchmaker",
         description = "Matchmaker is a cross-platform matchmaking plugin for Waterfall, Velocity, and PaperSpigot>=1.8.8.",
-        authors = {"regulad"}
+        authors = {"regulad"},
+        dependencies = {@Dependency(id = "partyandfriends")}
 )
 public class MatchmakerVelocity {
     @Getter
     private static @Nullable MatchmakerVelocity instance;
 
     @Inject
+    @Getter
     private @NotNull ProxyServer server;
     @Inject
+    @Getter
     private @NotNull Logger logger;
 
     @Inject
+    @Getter
     private @NotNull Metrics.Factory metricsFactory;
     @Getter
     private @Nullable Metrics metrics;
@@ -56,7 +67,7 @@ public class MatchmakerVelocity {
     private @Nullable ConfigurationNode configurationRoot;
 
     @Getter
-    private final @NotNull VelocityAPI velocityAPI = new VelocityAPI(this);
+    private final @NotNull VelocityAPI api = new VelocityAPI(this);
 
     public MatchmakerVelocity() {
         instance = this;
@@ -65,6 +76,16 @@ public class MatchmakerVelocity {
     @Subscribe
     public void initializeMetrics(final @NotNull ProxyInitializeEvent proxyInitializeEvent) {
         this.metrics = this.metricsFactory.make(this, 13899); // TODO: Replace this in your plugin!
+    }
+
+    @Subscribe
+    public void assertInstance(final @NotNull ProxyInitializeEvent proxyInitializeEvent) {
+        MatchmakerAPI.setInstance(this.api);
+    }
+
+    @Subscribe
+    public void releaseInstance(final @NotNull ProxyInitializeEvent proxyInitializeEvent) {
+        MatchmakerAPI.setInstance(null);
     }
 
     @Subscribe

@@ -91,7 +91,8 @@ public final class MatchmakerBukkit extends JavaPlugin implements PluginMessageL
                         getGameFuture = null;
                     }
                     if (getGameFuture != null) {
-                        getGameFuture.complete(byteArrayDataInput.readUTF());
+                        final @NotNull String result = byteArrayDataInput.readUTF();
+                        getGameFuture.complete(!result.equals("null") ? result : null);
                     }
                     break;
                 case "GetGames":
@@ -164,13 +165,13 @@ public final class MatchmakerBukkit extends JavaPlugin implements PluginMessageL
     }
 
     @Override
-    public @Nullable CompletableFuture<@NotNull String> getGame(final @NotNull UUID player) {
+    public @Nullable CompletableFuture<@Nullable String> getGame(final @NotNull UUID player) {
         final @Nullable Player bukkitPlayer = this.getServer().getPlayer(player);
         return bukkitPlayer != null ? this.getGame(bukkitPlayer) : null;
     }
 
-    public @NotNull CompletableFuture<@NotNull String> getGame(final @NotNull Player player) {
-        final @NotNull CompletableFuture<@NotNull String> completableFuture = new CompletableFuture<>();
+    public @NotNull CompletableFuture<@Nullable String> getGame(final @NotNull Player player) {
+        final @NotNull CompletableFuture<@Nullable String> completableFuture = new CompletableFuture<>();
 
         this.getGameFutures.push(completableFuture);
 

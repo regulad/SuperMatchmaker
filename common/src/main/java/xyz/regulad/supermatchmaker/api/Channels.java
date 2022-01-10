@@ -2,7 +2,7 @@ package xyz.regulad.supermatchmaker.api;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Channels {
+public final class Channels {
     private Channels() {
     }
 

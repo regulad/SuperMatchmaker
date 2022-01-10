@@ -8,10 +8,10 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
-import com.velocitypowered.api.proxy.server.ServerInfo;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
+import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import xyz.regulad.supermatchmaker.api.Channels;
 import xyz.regulad.supermatchmaker.velocity.MatchmakerVelocity;
 import xyz.regulad.supermatchmaker.velocity.util.VelocityChannels;
 
@@ -22,12 +22,9 @@ import java.util.concurrent.TimeUnit;
 /**
  * BungeeCord port
  */
+@RequiredArgsConstructor
 public final class PluginMessageListener {
     private final @NotNull MatchmakerVelocity matchmaker;
-
-    public PluginMessageListener(final @NotNull MatchmakerVelocity matchmaker) {
-        this.matchmaker = matchmaker;
-    }
 
     @Subscribe
     public @Nullable EventTask onPluginMessage(final @NotNull PluginMessageEvent event) {
@@ -37,6 +34,7 @@ public final class PluginMessageListener {
             event.setResult(PluginMessageEvent.ForwardResult.handled());
 
             final @NotNull ByteArrayDataInput inputStream = ByteStreams.newDataInput(event.getData());
+
 
             switch (inputStream.readUTF()) {
                 case "GetGames" -> {
@@ -53,18 +51,18 @@ public final class PluginMessageListener {
                 case "SendToGame" -> {
                     final @NotNull String gameToSend = inputStream.readUTF();
 
-                    final @Nullable CompletableFuture<@NotNull String> serverInfoCompletableFuture = this.matchmaker.getApi().sendToGame(player.getUniqueId(), gameToSend);
+                    final @Nullable CompletableFuture<@NotNull RegisteredServer> serverInfoCompletableFuture = this.matchmaker.getApi().sendToGame(player, gameToSend);
                     if (serverInfoCompletableFuture != null) {
                         serverInfoCompletableFuture.whenComplete((targetServerInfo, throwable) -> {
                             final @NotNull ByteArrayDataOutput sendGameOutput = ByteStreams.newDataOutput();
                             sendGameOutput.writeUTF("SendToGame");
                             sendGameOutput.writeUTF(player.getUsername());
-                            sendGameOutput.writeUTF(throwable != null ? targetServerInfo: "null");
+                            sendGameOutput.writeUTF(throwable != null ? targetServerInfo.getServerInfo().getName() : "null");
 
                             serverConnection.sendPluginMessage(VelocityChannels.TO_BACKEND_CHANNEL, sendGameOutput.toByteArray());
                         });
 
-                        serverInfoCompletableFuture.orTimeout(this.matchmaker.getConfigurationRoot().getNode("timeout").getLong(750), TimeUnit.MILLISECONDS);
+                        serverInfoCompletableFuture.orTimeout(this.matchmaker.getConfig().getNode("timeout").getLong(750), TimeUnit.MILLISECONDS);
                         // A timeout of sorts.
                     } else {
                         return EventTask.async(() -> {
@@ -78,7 +76,7 @@ public final class PluginMessageListener {
                     }
                 }
                 case "GetGame" -> {
-                    final @Nullable CompletableFuture<@Nullable String> future = this.matchmaker.getApi().getGame(player.getUniqueId());
+                    final @Nullable CompletableFuture<@Nullable String> future = this.matchmaker.getApi().getGame(player);
                     if (future != null) {
                         future.thenAccept(game -> {
                             final @NotNull ByteArrayDataOutput getGameOutput = ByteStreams.newDataOutput();

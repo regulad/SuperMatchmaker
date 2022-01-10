@@ -62,10 +62,6 @@
                             <pattern>org.bstats</pattern>
                             <shadedPattern>${project.parent.groupId}.dep.org.bstats</shadedPattern>
                         </relocation>
-                        <relocation>
-                            <pattern>net.kyori</pattern>
-                            <shadedPattern>${project.parent.groupId}.dep.net.kyori</shadedPattern>
-                        </relocation>
                     </relocations>
                 </configuration>
                 <executions>

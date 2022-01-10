@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 
@@ -14,7 +15,8 @@ import java.util.Collection;
 @RequiredArgsConstructor
 public final class PreGameSendEvent implements ResultedEvent<PreGameSendEvent.PreGameSendEventResult> {
     final @NotNull Collection<@NotNull Player> toBeSent;
-    final @NotNull String gameName;
+    final @Nullable Player targetPlayer;
+    final @NotNull String targetGame;
 
     @NotNull PreGameSendEventResult result = PreGameSendEventResult.CAN_CONNECT;
 

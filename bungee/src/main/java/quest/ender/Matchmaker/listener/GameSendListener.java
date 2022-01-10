@@ -12,7 +12,7 @@ import quest.ender.Matchmaker.events.GameSendFailureEvent;
 import quest.ender.Matchmaker.events.GameSendSuccessEvent;
 import quest.ender.Matchmaker.events.PreGameSendEvent;
 import quest.ender.Matchmaker.util.PartyUtil;
-import xyz.regulad.supermatchmaker.api.Channels;
+import xyz.regulad.supermatchmaker.util.Channels;
 
 import java.util.ArrayList;
 
@@ -44,7 +44,7 @@ public class GameSendListener implements Listener {
             displayNameList.add(proxiedPlayer.getDisplayName());
         }
 
-        gameSendSuccessEvent.getConnectionFuture().thenApply(result -> {
+        gameSendSuccessEvent.getConnectionFuture().thenAccept(result -> {
             final @NotNull ByteArrayDataOutput byteArrayDataOutput = ByteStreams.newDataOutput();
 
             byteArrayDataOutput.writeUTF("SentToGame");
@@ -52,11 +52,9 @@ public class GameSendListener implements Listener {
             byteArrayDataOutput.writeUTF(gameSendSuccessEvent.getTargetGame());
 
             gameSendSuccessEvent.getTargetServer().sendData(Channels.TO_BACKEND_CHANNEL, byteArrayDataOutput.toByteArray());
-
-            return result;
         });
 
-        this.matchmaker.getLogger().info(String.join(", ", displayNameList) + " connected to " + gameSendSuccessEvent.getTargetServer().getName() + " for " + this.matchmaker.getGame(gameSendSuccessEvent.getTargetServer()));
+        this.matchmaker.getLogger().info(String.join(", ", displayNameList) + " connected to " + gameSendSuccessEvent.getTargetServer().getName() + " for " + this.matchmaker.getGameFromServer(gameSendSuccessEvent.getTargetServer()));
     }
 
     @EventHandler

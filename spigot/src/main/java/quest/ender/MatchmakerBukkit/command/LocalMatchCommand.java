@@ -27,10 +27,10 @@ public final class LocalMatchCommand implements CommandExecutor, TabCompleter {
         this.matchmakerBukkit = matchmakerBukkit;
     }
 
-    private static final @NotNull TextComponent SENT_TO_SERVER = Component.text("Sent you to %s.").color(NamedTextColor.GREEN);
-    private static final @NotNull TextComponent SEND_FAILED = Component.text("We were unable to send you to a game. Try again later.").color(NamedTextColor.RED);
-    private static final @NotNull TextComponent PLAYERS_ONLY = Component.text("Only players may execute this command.").color(NamedTextColor.RED);
-    private static final @NotNull TextComponent ARGUMENT_MISMATCH = Component.text("This command only excepts one argument, the game name.").color(NamedTextColor.RED);
+    private static final @NotNull TextComponent SENT_TO_SERVER = Component.text("Sent you to %s.", NamedTextColor.GREEN);
+    private static final @NotNull TextComponent SEND_FAILED = Component.text("We were unable to send you to a game. Try again later.", NamedTextColor.RED);
+    private static final @NotNull TextComponent PLAYERS_ONLY = Component.text("Only players may execute this command.", NamedTextColor.RED);
+    private static final @NotNull TextComponent ARGUMENT_MISMATCH = Component.text("This command only excepts one argument, the game name.", NamedTextColor.RED);
 
     @Override
     public boolean onCommand(final @NotNull CommandSender sender, final @NotNull Command command, final @NotNull String label, String[] args) {
@@ -48,13 +48,12 @@ public final class LocalMatchCommand implements CommandExecutor, TabCompleter {
 
             final @Nullable CompletableFuture<@NotNull String> serverInfoCompletableFuture = this.matchmakerBukkit.sendToGame(player, gameName);
 
-            serverInfoCompletableFuture.thenApply((targetServer) -> {
-                if (!targetServer.equals("null")) {
+            serverInfoCompletableFuture.whenComplete((targetServer, throwable) -> {
+                if (throwable == null) {
                     audience.sendMessage(SENT_TO_SERVER.content(String.format(SENT_TO_SERVER.content(), targetServer)));
                 } else {
                     audience.sendMessage(SEND_FAILED);
                 }
-                return targetServer;
             });
 
             return true;

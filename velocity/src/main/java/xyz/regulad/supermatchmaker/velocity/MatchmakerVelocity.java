@@ -1,6 +1,7 @@
 package xyz.regulad.supermatchmaker.velocity;
 
 import com.google.inject.Inject;
+import com.mojang.brigadier.tree.CommandNode;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
@@ -12,19 +13,21 @@ import lombok.Getter;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.yaml.YAMLConfigurationLoader;
 import org.bstats.velocity.Metrics;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.regulad.supermatchmaker.api.MatchmakerAPI;
 import xyz.regulad.supermatchmaker.velocity.api.VelocityAPI;
+import xyz.regulad.supermatchmaker.velocity.listener.ConnectionListener;
+import xyz.regulad.supermatchmaker.velocity.listener.GameSendListener;
+import xyz.regulad.supermatchmaker.velocity.listener.PluginMessageListener;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 // fixme
@@ -43,7 +46,7 @@ public class MatchmakerVelocity {
 
     @Inject
     @Getter
-    private @NotNull ProxyServer server;
+    private @NotNull ProxyServer proxy;
     @Inject
     @Getter
     private @NotNull Logger logger;
@@ -64,7 +67,7 @@ public class MatchmakerVelocity {
     @Getter
     private @Nullable YAMLConfigurationLoader configurationLoader;
     @Getter
-    private @Nullable ConfigurationNode configurationRoot;
+    private @Nullable ConfigurationNode config;
 
     @Getter
     private final @NotNull VelocityAPI api = new VelocityAPI(this);
@@ -84,12 +87,23 @@ public class MatchmakerVelocity {
     }
 
     @Subscribe
-    public void releaseInstance(final @NotNull ProxyInitializeEvent proxyInitializeEvent) {
-        MatchmakerAPI.setInstance(null);
+    public void registerListeners(final @NotNull ProxyInitializeEvent proxyInitializeEvent) {
+        this.getProxy().getEventManager().register(this, new PluginMessageListener(this));
+        this.getProxy().getEventManager().register(this, new GameSendListener(this));
+        this.getProxy().getEventManager().register(this, new ConnectionListener(this));
     }
 
     @Subscribe
-    public void loadConfig(final @NotNull ProxyInitializeEvent proxyInitializeEvent) {
+    public void releaseInstance(final @NotNull ProxyShutdownEvent proxyShutdownEvent) {
+        MatchmakerAPI.setInstance(null);
+    }
+
+    public void reloadConfig() throws IOException {
+        this.config = Objects.requireNonNull(this.configurationLoader).load();
+    }
+
+    @Subscribe
+    public void initiallyLoadConfig(final @NotNull ProxyInitializeEvent proxyInitializeEvent) {
         try {
             this.pluginFolderFile = this.pluginFolder.toFile();
 
@@ -113,9 +127,9 @@ public class MatchmakerVelocity {
                     .setFile(this.configFile)
                     .build();
 
-            this.configurationRoot = this.configurationLoader.load();
+            reloadConfig();
 
-            logger.info("Config version: " + this.configurationRoot.getNode("version").getInt());
+            logger.info("Config version: " + this.config.getNode("version").getInt());
         } catch (IOException exception) {
             exception.printStackTrace();
         }

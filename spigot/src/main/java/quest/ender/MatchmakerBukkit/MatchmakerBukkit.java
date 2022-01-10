@@ -15,8 +15,8 @@ import org.jetbrains.annotations.Nullable;
 import quest.ender.MatchmakerBukkit.command.LocalMatchCommand;
 import quest.ender.MatchmakerBukkit.event.SentToGameEvent;
 import quest.ender.MatchmakerBukkit.listener.SentToGameListener;
-import xyz.regulad.supermatchmaker.api.Channels;
 import xyz.regulad.supermatchmaker.api.MatchmakerAPI;
+import xyz.regulad.supermatchmaker.util.Channels;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * The Bukkit extension of Matchmaker is an API middleman.
  */
-public final class MatchmakerBukkit extends JavaPlugin implements PluginMessageListener, MatchmakerAPI {
+public final class MatchmakerBukkit extends JavaPlugin implements PluginMessageListener, MatchmakerAPI<Player, String> {
     private final @NotNull Metrics metrics = new Metrics(this, 13907);
     private final @NotNull ConcurrentHashMap<@NotNull Player, @NotNull CompletableFuture<@NotNull String>> sendToGameFutures = new ConcurrentHashMap<>(64);
     private final @NotNull ConcurrentHashMap<@NotNull String, @NotNull CompletableFuture<@NotNull Integer>> getGameStatsFutures = new ConcurrentHashMap<>(64);
@@ -123,11 +123,6 @@ public final class MatchmakerBukkit extends JavaPlugin implements PluginMessageL
     }
 
     @Override
-    public @Nullable CompletableFuture<@NotNull String> sendToGame(final @NotNull UUID player, final @NotNull String gameName) {
-        final @Nullable Player bukkitPlayer = this.getServer().getPlayer(player);
-        return bukkitPlayer != null ? this.sendToGame(bukkitPlayer, gameName) : null;
-    }
-
     public @NotNull CompletableFuture<@NotNull String> sendToGame(final @NotNull Player player, final @NotNull String gameName) {
         final @NotNull CompletableFuture<@NotNull String> completableFuture = new CompletableFuture<>();
 
@@ -165,11 +160,6 @@ public final class MatchmakerBukkit extends JavaPlugin implements PluginMessageL
     }
 
     @Override
-    public @Nullable CompletableFuture<@Nullable String> getGame(final @NotNull UUID player) {
-        final @Nullable Player bukkitPlayer = this.getServer().getPlayer(player);
-        return bukkitPlayer != null ? this.getGame(bukkitPlayer) : null;
-    }
-
     public @NotNull CompletableFuture<@Nullable String> getGame(final @NotNull Player player) {
         final @NotNull CompletableFuture<@Nullable String> completableFuture = new CompletableFuture<>();
 

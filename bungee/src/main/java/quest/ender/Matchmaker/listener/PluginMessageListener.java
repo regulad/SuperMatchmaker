@@ -11,7 +11,7 @@ import net.md_5.bungee.event.EventHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import quest.ender.Matchmaker.Matchmaker;
-import xyz.regulad.supermatchmaker.api.Channels;
+import xyz.regulad.supermatchmaker.util.Channels;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -74,7 +74,7 @@ public class PluginMessageListener implements Listener {
                     }
                 }
                 case "GetGame" -> {
-                    final @Nullable String currentGame = this.matchmaker.getGame(serverInfo);
+                    final @Nullable String currentGame = this.matchmaker.getGameFromServer(serverInfo);
                     final @Nullable ByteArrayDataOutput getGameOutput = ByteStreams.newDataOutput();
                     getGameOutput.writeUTF("GetGame");
                     getGameOutput.writeUTF(currentGame != null ? currentGame : "null");

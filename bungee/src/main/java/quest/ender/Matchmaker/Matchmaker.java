@@ -25,8 +25,9 @@ import quest.ender.Matchmaker.listener.GameSendListener;
 import quest.ender.Matchmaker.listener.PluginMessageListener;
 import quest.ender.Matchmaker.util.BungeePlayerUtil;
 import quest.ender.Matchmaker.util.PartyUtil;
-import xyz.regulad.supermatchmaker.api.Channels;
 import xyz.regulad.supermatchmaker.api.MatchmakerAPI;
+import xyz.regulad.supermatchmaker.api.ProxyMatchmakerAPI;
+import xyz.regulad.supermatchmaker.util.Channels;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,10 +36,9 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-public class Matchmaker extends Plugin implements MatchmakerAPI {
+public class Matchmaker extends Plugin implements ProxyMatchmakerAPI<ProxiedPlayer, ServerInfo> {
     private @Nullable Metrics metrics = null;
     private @Nullable Configuration configuration = null;
 
@@ -147,7 +147,8 @@ public class Matchmaker extends Plugin implements MatchmakerAPI {
      * @param gameName The game that will be searched for servers.
      * @return An {@link ArrayList} of servers attached to the game. If a game is not real or has no servers, it will be an empty list.
      */
-    public @NotNull ArrayList<ServerInfo> getServers(String gameName) {
+    @Override
+    public @NotNull List<ServerInfo> getServers(@NotNull String gameName) {
         final @NotNull List<String> serverList = this.getConfig().getStringList("games." + gameName);
         final @NotNull ArrayList<ServerInfo> validServers = new ArrayList<>();
 
@@ -160,9 +161,8 @@ public class Matchmaker extends Plugin implements MatchmakerAPI {
     }
 
     @Override
-    public @Nullable CompletableFuture<@Nullable String> getGame(@NotNull UUID player) {
-        final @Nullable ProxiedPlayer proxiedPlayer = this.getProxy().getPlayer(player);
-        return proxiedPlayer != null ? CompletableFuture.completedFuture(this.getGame(proxiedPlayer.getServer().getInfo())) : null;
+    public @Nullable CompletableFuture<@Nullable String> getGame(@NotNull ProxiedPlayer player) {
+        return CompletableFuture.completedFuture(this.getGameFromServer(player.getServer().getInfo()));
     }
 
     /**
@@ -171,7 +171,8 @@ public class Matchmaker extends Plugin implements MatchmakerAPI {
      * @param serverInfo A {@link ServerInfo} that may or may not be part of a game.
      * @return A game, in {@link String} form. May be null if the serverInfo is not part of a game.
      */
-    public @Nullable String getGame(ServerInfo serverInfo) {
+    @Override
+    public @Nullable String getGameFromServer(@NotNull ServerInfo serverInfo) {
         for (String game : this.getGamesInstantly()) {
             for (ServerInfo compare : this.getServers(game)) {
                 if (compare.equals(serverInfo)) return game;
@@ -186,6 +187,7 @@ public class Matchmaker extends Plugin implements MatchmakerAPI {
      * @param gameName The name of the game, in {@link String} form.
      * @return An {@link Integer} value of how many players are on servers hosting the gameName. May be 0 if the game does not exist or no servers are hosting it.
      */
+    @Override
     public @NotNull CompletableFuture<@NotNull Integer> getGamePlayerCount(@NotNull String gameName) {
         int playerCount = 0;
 
@@ -211,25 +213,14 @@ public class Matchmaker extends Plugin implements MatchmakerAPI {
      *
      * @param gameName       The name of the game, in {@link String} form.
      * @param proxiedPlayers The number of players the server must accept.
-     * @return A future that returns a {@link ServerInfo} that must accommodate players. If no servers are found, the future will not complete. This is only valid in the instant that is received, since the state of the server may change. (i.e. a player joining, putting the server over it's limit)
-     * @deprecated in favor of {@link Matchmaker#getServer(String, int, ProxiedPlayer)}.
-     */
-    public @Nullable CompletableFuture<ServerInfo> getServer(final @NotNull String gameName, int proxiedPlayers) {
-        return this.getServer(gameName, proxiedPlayers, null);
-    }
-
-    /**
-     * Get a {@link ServerInfo} capable of receiving the proxiedPlayers. This may take as long as a second, since it has to ping servers.
-     *
-     * @param gameName       The name of the game, in {@link String} form.
-     * @param proxiedPlayers The number of players the server must accept.
      * @param targetPlayer   The player to test for in the server. Optional, may be null.
      * @return A future that returns a {@link ServerInfo} that must accommodate players. If no servers are found, the future will not complete. This is only valid in the instant that is received, since the state of the server may change. (i.e. a player joining, putting the server over it's limit)
      */
+    @Override
     public @Nullable CompletableFuture<ServerInfo> getServer(final @NotNull String gameName, int proxiedPlayers, final @Nullable ProxiedPlayer targetPlayer) {
         if (!this.getGamesInstantly().contains(gameName)) return null;
 
-        final @NotNull ArrayList<ServerInfo> serverList = this.getServers(gameName);
+        final @NotNull List<ServerInfo> serverList = this.getServers(gameName);
 
         final @NotNull CompletableFuture<ServerInfo> serverPingCompletableFuture = new CompletableFuture<>();
         for (final @NotNull ServerInfo serverInfo : serverList) {
@@ -249,27 +240,13 @@ public class Matchmaker extends Plugin implements MatchmakerAPI {
         return serverPingCompletableFuture;
     }
 
-    @Override
-    public @Nullable CompletableFuture<@NotNull String> sendToGame(final @NotNull UUID player, final @NotNull String gameName) {
-        final @NotNull CompletableFuture<@NotNull String> wrappedFuture = new CompletableFuture<>();
-        final @Nullable ProxiedPlayer proxiedPlayer = this.getProxy().getPlayer(player);
-        final @Nullable CompletableFuture<ServerInfo> unwrappedFuture = proxiedPlayer != null ? this.sendToGame(proxiedPlayer, gameName) : null;
-        if (unwrappedFuture != null) {
-            unwrappedFuture.thenApply(serverInfo -> {
-                wrappedFuture.complete(serverInfo.getName());
-
-                return serverInfo;
-            });
-        }
-        return wrappedFuture;
-    }
-
     /**
      * Sends a player or party to a game. Broadcasts events, and may be cancelled by them.
      *
      * @param player   The {@link ProxiedPlayer} to be sent to the game.
      * @param gameName The name of a game, in {@link String} form.
      */
+    @Override
     public @Nullable CompletableFuture<ServerInfo> sendToGame(final @NotNull ProxiedPlayer player, final @NotNull String gameName) {
         final @NotNull PreGameSendEvent preGameSendEvent = new PreGameSendEvent(player, gameName);
         this.getProxy().getPluginManager().callEvent(preGameSendEvent);

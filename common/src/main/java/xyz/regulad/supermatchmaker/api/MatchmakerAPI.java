@@ -12,37 +12,39 @@ import java.util.concurrent.CompletableFuture;
 /**
  * An API for interacting with Matchmaker, either via a proxy implementation (Velocity or Waterfall) or a server implementation like PaperSpigot>=1.8.8.
  * Any methods of classes outside this API are subject to change. The API will stay the same between Major revisions.
+ * @param <P> The player type.
+ * @param <S> The server type.
  */
-public interface MatchmakerAPI {
-    static @Nullable MatchmakerAPI getInstance() {
+public interface MatchmakerAPI <P, S> {
+    static @Nullable MatchmakerAPI<?, ?> getInstance() {
         return InstanceHolder.getMatchmakerAPI();
     }
 
-    static void setInstance(final @Nullable MatchmakerAPI matchmakerAPI) {
+    static void setInstance(final @Nullable MatchmakerAPI<?, ?> matchmakerAPI) {
         InstanceHolder.setMatchmakerAPI(matchmakerAPI);
     }
 
     class InstanceHolder {
         @Getter
         @Setter
-        private static @Nullable MatchmakerAPI matchmakerAPI;
+        private static @Nullable MatchmakerAPI<?, ?> matchmakerAPI;
     }
 
     /**
      * Sends a player or party to a game. Broadcasts events, and may be cancelled by them.
      *
-     * @param player   The {@link UUID} of the player to be sent to the game.
+     * @param player   The player to be sent to the game.
      * @param gameName The name of a game, in {@link String} form.
      */
-    @Nullable CompletableFuture<@NotNull String> sendToGame(final @NotNull UUID player, final @NotNull String gameName);
+    @Nullable CompletableFuture<@NotNull S> sendToGame(final @NotNull P player, final @NotNull String gameName);
 
     /**
      * Gets the game a player is in.
      *
-     * @param player The {@link UUID} of the player to get the game of.
+     * @param player The player to get the game of.
      * @return The name of the game in a future.
      */
-    @Nullable CompletableFuture<@Nullable String> getGame(final @NotNull UUID player);
+    @Nullable CompletableFuture<@Nullable String> getGame(final @NotNull P player);
 
     /**
      * Gets the amount of players current on servers hosting a game. On a server implementation, this may not be completed instantly, and this may be {@code null} if the server cannot a carrier to deliver the message.

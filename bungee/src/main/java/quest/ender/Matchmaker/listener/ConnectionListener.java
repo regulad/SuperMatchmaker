@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import quest.ender.Matchmaker.Matchmaker;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -30,7 +30,7 @@ public class ConnectionListener implements Listener {
         this.matchmaker.getProxy().getScheduler().schedule(this.matchmaker, () -> {
             final @Nullable Server currentServer = postLoginEvent.getPlayer().getServer();
             final @Nullable ServerInfo currentServerInfo = currentServer != null ? currentServer.getInfo() : null;
-            final @Nullable String currentGame = currentServerInfo != null ? this.matchmaker.getGame(currentServerInfo) : null;
+            final @Nullable String currentGame = currentServerInfo != null ? this.matchmaker.getGameFromServer(currentServerInfo) : null;
 
             final @NotNull String targetGame = this.matchmaker.getConfig().getString("login.game");
 
@@ -66,7 +66,7 @@ public class ConnectionListener implements Listener {
     public void onPlayerKick(final @NotNull ServerKickEvent serverKickEvent) { // It may take too long for the fallback server to be found. That's fine, I guess?
         final @NotNull ProxiedPlayer affectedPlayer = serverKickEvent.getPlayer();
         final @NotNull String gameName = this.matchmaker.getConfig().getString("fallback.game");
-        final @NotNull ArrayList<@NotNull ServerInfo> servers = this.matchmaker.getServers(gameName);
+        final @NotNull List<@NotNull ServerInfo> servers = this.matchmaker.getServers(gameName);
 
         if (servers.size() == 1) {
             serverKickEvent.setCancelServer(servers.get(0));

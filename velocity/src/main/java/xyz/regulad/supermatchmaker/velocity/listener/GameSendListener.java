@@ -1,5 +1,6 @@
 package xyz.regulad.supermatchmaker.velocity.listener;
 
+import com.google.common.base.Strings;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import com.velocitypowered.api.event.Subscribe;
@@ -25,7 +26,7 @@ public final class GameSendListener {
     @Subscribe
     public void checkForPermissions(final @NotNull PreGameSendEvent preGameSendEvent) {
         final @Nullable String baseGamePermission = Objects.requireNonNull(this.matchmaker.getConfig()).getNode("base_game_permission").getString();
-        if (baseGamePermission != null
+        if (!Strings.isNullOrEmpty(baseGamePermission)
                 && preGameSendEvent.getTargetPlayer() != null
                 && !preGameSendEvent.getTargetPlayer().hasPermission(baseGamePermission + "." + preGameSendEvent.getTargetGame())) {
             preGameSendEvent.setResult(PreGameSendEvent.PreGameSendEventResult.CANNOT_CONNECT);

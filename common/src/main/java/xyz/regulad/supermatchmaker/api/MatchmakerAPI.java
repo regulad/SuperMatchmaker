@@ -6,16 +6,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
  * An API for interacting with Matchmaker, either via a proxy implementation (Velocity or Waterfall) or a server implementation like PaperSpigot>=1.8.8.
  * Any methods of classes outside this API are subject to change. The API will stay the same between Major revisions.
- * @param <P> The player type.
- * @param <S> The server type.
+ * @param <PlayerType> The player type.
+ * @param <ServerType> The server type.
  */
-public interface MatchmakerAPI <P, S> {
+public interface MatchmakerAPI <PlayerType, ServerType> {
     static @Nullable MatchmakerAPI<?, ?> getInstance() {
         return InstanceHolder.getMatchmakerAPI();
     }
@@ -36,7 +35,7 @@ public interface MatchmakerAPI <P, S> {
      * @param player   The player to be sent to the game.
      * @param gameName The name of a game, in {@link String} form.
      */
-    @Nullable CompletableFuture<@NotNull S> sendToGame(final @NotNull P player, final @NotNull String gameName);
+    @Nullable CompletableFuture<@NotNull ServerType> sendToGame(final @NotNull PlayerType player, final @NotNull String gameName);
 
     /**
      * Gets the game a player is in.
@@ -44,7 +43,7 @@ public interface MatchmakerAPI <P, S> {
      * @param player The player to get the game of.
      * @return The name of the game in a future.
      */
-    @Nullable CompletableFuture<@Nullable String> getGame(final @NotNull P player);
+    @Nullable CompletableFuture<@Nullable String> getGame(final @NotNull PlayerType player);
 
     /**
      * Gets the amount of players current on servers hosting a game. On a server implementation, this may not be completed instantly, and this may be {@code null} if the server cannot a carrier to deliver the message.

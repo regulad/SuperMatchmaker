@@ -1,19 +1,21 @@
 package xyz.regulad.supermatchmaker.api;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
-public interface ProxyMatchmakerAPI<P, S> extends MatchmakerAPI<P, S> {
-    default @Nullable CompletableFuture<@Nullable S> getServer(final @NotNull String gameName, int proxiedPlayers) {
+public interface ProxyMatchmakerAPI<PlayerType, ServerType> extends MatchmakerAPI<PlayerType, ServerType> {
+    @Contract(pure = true)
+    default @Nullable CompletableFuture<@Nullable ServerType> getServer(final @NotNull String gameName, int proxiedPlayers) {
         return getServer(gameName, proxiedPlayers, null);
     }
 
-    @Nullable CompletableFuture<S> getServer(final @NotNull String gameName, int proxiedPlayers, final @Nullable P targetPlayer);
+    @Nullable CompletableFuture<ServerType> getServer(final @NotNull String gameName, int proxiedPlayers, final @Nullable PlayerType targetPlayer);
 
-    @Nullable String getGameFromServer(final @NotNull S serverInfo);
+    @Nullable String getGameFromServer(final @NotNull ServerType serverInfo);
 
-    @NotNull Collection<S> getServers(final @NotNull String gameName);
+    @NotNull Collection<ServerType> getServers(final @NotNull String gameName);
 }

@@ -12,7 +12,7 @@ import java.util.ArrayList;
 /**
  * A collection of utilities for {@link PlayerParty}ies. This is a port of the BungeeCord class.
  */
-public class PartyUtil {
+public final class PartyUtil {
     private PartyUtil() {
     }
 

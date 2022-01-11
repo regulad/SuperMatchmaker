@@ -25,11 +25,11 @@ fallback:
   message: Something went wrong! You have been sent to limbo.
 login:
   game: lobby
+  # The following settings in this namespace are only for BungeeCord/Waterfall.
   holding: limbo # The **server** where players will be held until a usage server is found.
   after: 0 # In seconds, the time to wait before trying to find the player a server.
   # It's non-trivial to send players to a game on login.
   # Your options are either blocking the network thread or sending players to a temp server and then sending them somewhere else from there.
-  # I may create a fork of Waterfall that fires more handler methods and events async.
 games:
   limbo:
     - limbo

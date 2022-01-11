@@ -4,7 +4,7 @@ import com.google.common.base.Strings;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import com.velocitypowered.api.event.Subscribe;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.regulad.supermatchmaker.velocity.MatchmakerVelocity;
@@ -19,7 +19,7 @@ import java.util.Objects;
 /**
  * BungeeCord port
  */
-@RequiredArgsConstructor
+@AllArgsConstructor
 public final class GameSendListener {
     private final @NotNull MatchmakerVelocity matchmaker;
 
@@ -29,7 +29,7 @@ public final class GameSendListener {
         if (!Strings.isNullOrEmpty(baseGamePermission)
                 && preGameSendEvent.getTargetPlayer() != null
                 && !preGameSendEvent.getTargetPlayer().hasPermission(baseGamePermission + "." + preGameSendEvent.getTargetGame())) {
-            preGameSendEvent.setResult(PreGameSendEvent.PreGameSendEventResult.CANNOT_CONNECT);
+            preGameSendEvent.setResult(PreGameSendEvent.PreGameSendEventResult.cannotConnect());
         }
         // Cancel the event if the config has a value for base_game_permission and the player does not have it.
     }
@@ -37,7 +37,7 @@ public final class GameSendListener {
     @Subscribe
     public void checkIfLeader(final @NotNull PreGameSendEvent preGameSendEvent) {
         if (preGameSendEvent.getTargetPlayer() != null && !PartyUtil.leadsParty(preGameSendEvent.getTargetPlayer())) {
-            preGameSendEvent.setResult(PreGameSendEvent.PreGameSendEventResult.CANNOT_CONNECT);
+            preGameSendEvent.setResult(PreGameSendEvent.PreGameSendEventResult.cannotConnect());
         }
         // Player is not the leader of the party, we can move on.
     }
@@ -66,7 +66,7 @@ public final class GameSendListener {
             this.matchmaker.getLogger().warning(gameSendEvent.getTargetPlayer().getUsername() + " couldn't connect to the game " + gameSendEvent.getTargetGame());
             throwable.printStackTrace();
 
-            return false;
+            return null;
         });
     }
 }

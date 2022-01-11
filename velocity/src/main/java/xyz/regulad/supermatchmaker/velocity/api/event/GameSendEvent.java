@@ -3,8 +3,8 @@ package xyz.regulad.supermatchmaker.velocity.api.event;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,7 +12,7 @@ import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
 @Data
-@RequiredArgsConstructor
+@AllArgsConstructor
 public final class GameSendEvent {
     final @NotNull Collection<@NotNull Player> movedPlayers;
     final @Nullable Player targetPlayer;

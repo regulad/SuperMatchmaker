@@ -12,7 +12,7 @@ import quest.ender.Matchmaker.events.GameSendFailureEvent;
 import quest.ender.Matchmaker.events.GameSendSuccessEvent;
 import quest.ender.Matchmaker.events.PreGameSendEvent;
 import quest.ender.Matchmaker.util.PartyUtil;
-import xyz.regulad.supermatchmaker.util.Channels;
+import xyz.regulad.supermatchmaker.common.util.Channels;
 
 import java.util.ArrayList;
 

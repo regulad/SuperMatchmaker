@@ -9,20 +9,20 @@ import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.regulad.supermatchmaker.velocity.MatchmakerVelocity;
 import xyz.regulad.supermatchmaker.velocity.util.VelocityChannels;
 
-import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
  * BungeeCord port
  */
-@RequiredArgsConstructor
+@AllArgsConstructor
 public final class PluginMessageListener {
     private final @NotNull MatchmakerVelocity matchmaker;
 
@@ -38,7 +38,7 @@ public final class PluginMessageListener {
 
             switch (inputStream.readUTF()) {
                 case "GetGames" -> {
-                    final @Nullable CompletableFuture<@NotNull Collection<@NotNull String>> future = this.matchmaker.getApi().getGames();
+                    final @NotNull CompletableFuture<@NotNull List<@NotNull String>> future = this.matchmaker.getApi().getGames();
                     if (future != null) {
                         future.thenAccept(games -> {
                             final @NotNull ByteArrayDataOutput getGamesOutput = ByteStreams.newDataOutput();
@@ -57,7 +57,7 @@ public final class PluginMessageListener {
                             final @NotNull ByteArrayDataOutput sendGameOutput = ByteStreams.newDataOutput();
                             sendGameOutput.writeUTF("SendToGame");
                             sendGameOutput.writeUTF(player.getUsername());
-                            sendGameOutput.writeUTF(throwable != null ? targetServerInfo.getServerInfo().getName() : "null");
+                            sendGameOutput.writeUTF(throwable == null ? targetServerInfo.getServerInfo().getName() : "null");
 
                             serverConnection.sendPluginMessage(VelocityChannels.TO_BACKEND_CHANNEL, sendGameOutput.toByteArray());
                         });

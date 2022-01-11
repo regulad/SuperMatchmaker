@@ -1,8 +1,8 @@
 # SuperMatchmaker
 
-SuperMatchmaker is a cross-platform matchmaking plugin for Waterfall and PaperSpigot>=1.8.8.
+SuperMatchmaker is a cross-platform matchmaking plugin for Velocity, Waterfall and PaperSpigot>=1.8.8.
 
-Velocity, Glowstone and Sponge support coming soon.
+Glowstone and Sponge support coming soon.
 
 ## Developers
 

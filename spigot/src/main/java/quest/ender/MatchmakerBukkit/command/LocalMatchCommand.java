@@ -13,7 +13,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import quest.ender.MatchmakerBukkit.MatchmakerBukkit;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -21,7 +20,7 @@ import java.util.concurrent.ExecutionException;
 
 public final class LocalMatchCommand implements CommandExecutor, TabCompleter {
     private final @NotNull MatchmakerBukkit matchmakerBukkit;
-    private @Nullable CompletableFuture<@NotNull Collection<@NotNull String>> gameList = null;
+    private @Nullable CompletableFuture<@NotNull List<@NotNull String>> gameList = null;
 
     public LocalMatchCommand(final @NotNull MatchmakerBukkit matchmakerBukkit) {
         this.matchmakerBukkit = matchmakerBukkit;
@@ -30,7 +29,7 @@ public final class LocalMatchCommand implements CommandExecutor, TabCompleter {
     private static final @NotNull TextComponent SENT_TO_SERVER = Component.text("Sent you to %s.", NamedTextColor.GREEN);
     private static final @NotNull TextComponent SEND_FAILED = Component.text("We were unable to send you to a game. Try again later.", NamedTextColor.RED);
     private static final @NotNull TextComponent PLAYERS_ONLY = Component.text("Only players may execute this command.", NamedTextColor.RED);
-    private static final @NotNull TextComponent ARGUMENT_MISMATCH = Component.text("This command only excepts one argument, the game name.", NamedTextColor.RED);
+    private static final @NotNull TextComponent ARGUMENT_MISMATCH = Component.text("This command only accepts one argument, the game name.", NamedTextColor.RED);
 
     @Override
     public boolean onCommand(final @NotNull CommandSender sender, final @NotNull Command command, final @NotNull String label, String[] args) {

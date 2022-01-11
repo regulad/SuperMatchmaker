@@ -25,9 +25,9 @@ import quest.ender.Matchmaker.listener.GameSendListener;
 import quest.ender.Matchmaker.listener.PluginMessageListener;
 import quest.ender.Matchmaker.util.BungeePlayerUtil;
 import quest.ender.Matchmaker.util.PartyUtil;
-import xyz.regulad.supermatchmaker.api.MatchmakerAPI;
-import xyz.regulad.supermatchmaker.api.ProxyMatchmakerAPI;
-import xyz.regulad.supermatchmaker.util.Channels;
+import xyz.regulad.supermatchmaker.common.api.MatchmakerAPI;
+import xyz.regulad.supermatchmaker.common.api.ProxyMatchmakerAPI;
+import xyz.regulad.supermatchmaker.common.util.Channels;
 
 import java.io.File;
 import java.io.IOException;
@@ -132,8 +132,8 @@ public class Matchmaker extends Plugin implements ProxyMatchmakerAPI<ProxiedPlay
      *
      * @return A {@link Collection} of games. Not all of these games may be valid, since some may not have servers attached.
      */
-    public @NotNull Collection<String> getGamesInstantly() {
-        return this.getConfig().getSection("games").getKeys();
+    public @NotNull List<@NotNull String> getGamesInstantly() {
+        return this.getConfig().getSection("games").getKeys().stream().toList();
     }
 
     /**

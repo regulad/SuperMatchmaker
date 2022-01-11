@@ -1,10 +1,11 @@
-package xyz.regulad.supermatchmaker.api;
+package xyz.regulad.supermatchmaker.common.api;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public interface ProxyMatchmakerAPI<P, S> extends MatchmakerAPI<P, S> {
@@ -17,11 +18,11 @@ public interface ProxyMatchmakerAPI<P, S> extends MatchmakerAPI<P, S> {
 
     @Nullable String getGameFromServer(final @NotNull S serverInfo);
 
-    @NotNull Collection<@NotNull String> getGamesInstantly();
+    @NotNull List<@NotNull String> getGamesInstantly();
 
     @Override
     @Contract(pure = true)
-    default @NotNull CompletableFuture<@NotNull Collection<@NotNull String>> getGames() {
+    default @NotNull CompletableFuture<@NotNull List<@NotNull String>> getGames() {
         return CompletableFuture.completedFuture(getGamesInstantly());
     }
 

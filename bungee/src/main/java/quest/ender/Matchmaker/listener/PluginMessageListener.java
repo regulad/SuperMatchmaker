@@ -11,7 +11,7 @@ import net.md_5.bungee.event.EventHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import quest.ender.Matchmaker.Matchmaker;
-import xyz.regulad.supermatchmaker.util.Channels;
+import xyz.regulad.supermatchmaker.common.util.Channels;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;

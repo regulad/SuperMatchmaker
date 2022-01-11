@@ -1,8 +1,5 @@
-package xyz.regulad.supermatchmaker.util;
+package xyz.regulad.supermatchmaker.common.util;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 public final class Channels {

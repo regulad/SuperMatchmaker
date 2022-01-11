@@ -1,4 +1,4 @@
-package xyz.regulad.supermatchmaker.api;
+package xyz.regulad.supermatchmaker.common.api;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -6,15 +6,17 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
  * An API for interacting with Matchmaker, either via a proxy implementation (Velocity or Waterfall) or a server implementation like PaperSpigot>=1.8.8.
  * Any methods of classes outside this API are subject to change. The API will stay the same between Major revisions.
+ *
  * @param <P> The player type.
  * @param <S> The server type.
  */
-public interface MatchmakerAPI <P, S> {
+public interface MatchmakerAPI<P, S> {
     static @Nullable MatchmakerAPI<?, ?> getInstance() {
         return InstanceHolder.getMatchmakerAPI();
     }
@@ -58,5 +60,5 @@ public interface MatchmakerAPI <P, S> {
      *
      * @return A future containing {@link Collection} of games. Not all of these games may be valid, since some may not have servers attached.
      */
-    @Nullable CompletableFuture<@NotNull Collection<@NotNull String>> getGames();
+    @NotNull CompletableFuture<@NotNull List<@NotNull String>> getGames();
 }

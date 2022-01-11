@@ -8,9 +8,8 @@ import com.velocitypowered.api.event.player.KickedFromServerEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.scheduler.ScheduledTask;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -20,7 +19,6 @@ import org.jetbrains.annotations.Nullable;
 import xyz.regulad.supermatchmaker.velocity.MatchmakerVelocity;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -29,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * BungeeCord port
  */
-@RequiredArgsConstructor
+@AllArgsConstructor
 public final class ConnectionListener {
     private final @NotNull MatchmakerVelocity matchmaker;
 

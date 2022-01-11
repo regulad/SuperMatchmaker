@@ -8,8 +8,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import quest.ender.MatchmakerBukkit.MatchmakerBukkit;
 
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -17,7 +17,7 @@ public class MatchmakerExpansion extends PlaceholderExpansion implements Taskabl
     private final @NotNull MatchmakerBukkit matchmakerBukkit;
     private final @NotNull HashMap<@NotNull String, @NotNull CompletableFuture<@NotNull Integer>> gameStatFutures = new HashMap<>();
     private @Nullable CompletableFuture<@NotNull String> currentGameFuture = null;
-    private @Nullable CompletableFuture<@NotNull Collection<@NotNull String>> allGamesFuture = null;
+    private @Nullable CompletableFuture<@NotNull List<@NotNull String>> allGamesFuture = null;
     private final @NotNull BukkitRunnable bukkitRunnable = new BukkitRunnable() { // Clears the "cache" so any changes may be recorded.
         @Override
         public void run() {

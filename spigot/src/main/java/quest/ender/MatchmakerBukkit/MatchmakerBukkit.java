@@ -15,8 +15,8 @@ import org.jetbrains.annotations.Nullable;
 import quest.ender.MatchmakerBukkit.command.LocalMatchCommand;
 import quest.ender.MatchmakerBukkit.event.SentToGameEvent;
 import quest.ender.MatchmakerBukkit.listener.SentToGameListener;
-import xyz.regulad.supermatchmaker.api.MatchmakerAPI;
-import xyz.regulad.supermatchmaker.util.Channels;
+import xyz.regulad.supermatchmaker.common.api.MatchmakerAPI;
+import xyz.regulad.supermatchmaker.common.util.Channels;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -30,7 +30,7 @@ public final class MatchmakerBukkit extends JavaPlugin implements PluginMessageL
     private final @NotNull ConcurrentHashMap<@NotNull Player, @NotNull CompletableFuture<@NotNull String>> sendToGameFutures = new ConcurrentHashMap<>(64);
     private final @NotNull ConcurrentHashMap<@NotNull String, @NotNull CompletableFuture<@NotNull Integer>> getGameStatsFutures = new ConcurrentHashMap<>(64);
     private final @NotNull LinkedList<@NotNull CompletableFuture<@NotNull String>> getGameFutures = new LinkedList<>();
-    private final @NotNull LinkedList<@NotNull CompletableFuture<@NotNull Collection<@NotNull String>>> getGamesFutures = new LinkedList<>();
+    private final LinkedList<CompletableFuture<@NotNull List<@NotNull String>>> getGamesFutures = new LinkedList<CompletableFuture<@NotNull List<@NotNull String>>>();
     @Getter
     private @Nullable BukkitAudiences bukkitAudiences;
 
@@ -96,7 +96,7 @@ public final class MatchmakerBukkit extends JavaPlugin implements PluginMessageL
                     }
                     break;
                 case "GetGames":
-                    @Nullable CompletableFuture<@NotNull Collection<@NotNull String>> getGamesFuture;
+                    CompletableFuture<@NotNull List<@NotNull String>> getGamesFuture;
                     try {
                         getGamesFuture = this.getGamesFutures.pop();
                     } catch (NoSuchElementException noSuchElementException) {
@@ -175,13 +175,13 @@ public final class MatchmakerBukkit extends JavaPlugin implements PluginMessageL
     }
 
     @Override
-    public @Nullable CompletableFuture<@NotNull Collection<@NotNull String>> getGames() {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull String>> getGames() {
         final @Nullable Player carrier = this.getServer().getOnlinePlayers().stream().findFirst().orElse(null);
         return carrier != null ? this.getGames(carrier) : null;
     }
 
-    public @NotNull CompletableFuture<@NotNull Collection<@NotNull String>> getGames(final @NotNull Player player) {
-        final @NotNull CompletableFuture<@NotNull Collection<@NotNull String>> completableFuture = new CompletableFuture<>();
+    public @NotNull CompletableFuture<@NotNull List<@NotNull String>> getGames(final @NotNull Player player) {
+        final @NotNull CompletableFuture<@NotNull List<@NotNull String>> completableFuture = new CompletableFuture<>();
 
         this.getGamesFutures.push(completableFuture);
 

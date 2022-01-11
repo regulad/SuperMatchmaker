@@ -6,11 +6,11 @@ import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import xyz.regulad.supermatchmaker.api.ProxyMatchmakerAPI;
+import xyz.regulad.supermatchmaker.common.api.ProxyMatchmakerAPI;
 import xyz.regulad.supermatchmaker.velocity.MatchmakerVelocity;
 import xyz.regulad.supermatchmaker.velocity.api.event.GameSendEvent;
 import xyz.regulad.supermatchmaker.velocity.api.event.PreGameSendEvent;
@@ -21,7 +21,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class VelocityAPI implements ProxyMatchmakerAPI<Player, RegisteredServer> {
     private final @NotNull MatchmakerVelocity matchmakerVelocity;
 
@@ -37,7 +37,7 @@ public class VelocityAPI implements ProxyMatchmakerAPI<Player, RegisteredServer>
                                 .filter(Optional::isPresent)
                                 .map(Optional::get)
                                 .toList()
-                        );
+                );
             } catch (ObjectMappingException e) {
                 e.printStackTrace(); // What?
             }
@@ -45,8 +45,8 @@ public class VelocityAPI implements ProxyMatchmakerAPI<Player, RegisteredServer>
         return scratchMap;
     }
 
-    public @NotNull Collection<@NotNull String> getGamesInstantly() {
-        return this.getGameMap().keySet();
+    public @NotNull List<@NotNull String> getGamesInstantly() {
+        return this.getGameMap().keySet().stream().toList();
     }
 
     @Override

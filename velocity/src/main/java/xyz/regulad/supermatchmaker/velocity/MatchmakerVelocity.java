@@ -1,7 +1,7 @@
 package xyz.regulad.supermatchmaker.velocity;
 
+import com.google.common.reflect.TypeToken;
 import com.google.inject.Inject;
-import com.mojang.brigadier.tree.CommandNode;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
@@ -11,16 +11,20 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import lombok.Getter;
 import ninja.leaping.configurate.ConfigurationNode;
+import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import ninja.leaping.configurate.yaml.YAMLConfigurationLoader;
 import org.bstats.velocity.Metrics;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import xyz.regulad.supermatchmaker.api.MatchmakerAPI;
+import xyz.regulad.supermatchmaker.common.api.MatchmakerAPI;
 import xyz.regulad.supermatchmaker.velocity.api.VelocityAPI;
+import xyz.regulad.supermatchmaker.velocity.command.LobbyCommand;
+import xyz.regulad.supermatchmaker.velocity.command.MakeMatchCommand;
+import xyz.regulad.supermatchmaker.velocity.command.ReloadCommand;
 import xyz.regulad.supermatchmaker.velocity.listener.ConnectionListener;
 import xyz.regulad.supermatchmaker.velocity.listener.GameSendListener;
 import xyz.regulad.supermatchmaker.velocity.listener.PluginMessageListener;
+import xyz.regulad.supermatchmaker.velocity.util.VelocityChannels;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -93,9 +97,46 @@ public class MatchmakerVelocity {
         this.getProxy().getEventManager().register(this, new ConnectionListener(this));
     }
 
+
+    @Subscribe
+    public void registerCommands(final @NotNull ProxyInitializeEvent proxyInitializeEvent) {
+        final @NotNull LobbyCommand lobbyCommand = new LobbyCommand(this);
+        final @NotNull MakeMatchCommand makeMatchCommand = new MakeMatchCommand(this);
+        final @NotNull ReloadCommand reloadCommand = new ReloadCommand(this);
+        try {
+            this.getProxy().getCommandManager().register(
+                    lobbyCommand.getConfigurationNode().getNode("name").getString("makematch"),
+                    lobbyCommand,
+                    lobbyCommand.getConfigurationNode().getNode("aliases").getList(TypeToken.of(String.class)).toArray(String[]::new)
+            );
+            this.getProxy().getCommandManager().register(
+                    makeMatchCommand.getConfigurationNode().getNode("name").getString("lobby"),
+                    makeMatchCommand,
+                    makeMatchCommand.getConfigurationNode().getNode("aliases").getList(TypeToken.of(String.class)).toArray(String[]::new)
+            );
+            this.getProxy().getCommandManager().register(
+                    reloadCommand.getConfigurationNode().getNode("name").getString("mmreload"),
+                    reloadCommand,
+                    reloadCommand.getConfigurationNode().getNode("aliases").getList(TypeToken.of(String.class)).toArray(String[]::new)
+            );
+        } catch (ObjectMappingException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Subscribe
     public void releaseInstance(final @NotNull ProxyShutdownEvent proxyShutdownEvent) {
         MatchmakerAPI.setInstance(null);
+    }
+
+    @Subscribe
+    public void registerPluginChannel(final @NotNull ProxyInitializeEvent proxyInitializeEvent) {
+        this.getProxy().getChannelRegistrar().register(VelocityChannels.TO_BACKEND_CHANNEL, VelocityChannels.TO_PROXY_CHANNEL);
+    }
+
+    @Subscribe
+    public void unregisterPluginChannel(final @NotNull ProxyShutdownEvent proxyShutdownEvent) {
+        this.getProxy().getChannelRegistrar().unregister(VelocityChannels.TO_BACKEND_CHANNEL, VelocityChannels.TO_PROXY_CHANNEL);
     }
 
     public void reloadConfig() throws IOException {

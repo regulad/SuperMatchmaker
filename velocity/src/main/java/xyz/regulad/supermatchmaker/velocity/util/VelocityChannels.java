@@ -2,7 +2,7 @@ package xyz.regulad.supermatchmaker.velocity.util;
 
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import org.jetbrains.annotations.NotNull;
-import xyz.regulad.supermatchmaker.util.Channels;
+import xyz.regulad.supermatchmaker.common.util.Channels;
 
 public final class VelocityChannels {
     private VelocityChannels() {

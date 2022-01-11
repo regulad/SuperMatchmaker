@@ -1,9 +1,11 @@
 package xyz.regulad.supermatchmaker.velocity.api;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.api.proxy.server.ServerPing;
 import lombok.RequiredArgsConstructor;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.jetbrains.annotations.NotNull;
@@ -43,14 +45,13 @@ public class VelocityAPI implements ProxyMatchmakerAPI<Player, RegisteredServer>
         return scratchMap;
     }
 
-    @Override
-    public @Nullable CompletableFuture<@NotNull Collection<@NotNull String>> getGames() {
-        return CompletableFuture.completedFuture(this.getGameMap().keySet());
+    public @NotNull Collection<@NotNull String> getGamesInstantly() {
+        return this.getGameMap().keySet();
     }
 
     @Override
     public @NotNull Collection<RegisteredServer> getServers(@NotNull String gameName) {
-        return this.getGameMap().getOrDefault(gameName, List.of());
+        return this.getGameMap().getOrDefault(gameName, ImmutableList.of());
     }
 
     @Override
@@ -107,7 +108,22 @@ public class VelocityAPI implements ProxyMatchmakerAPI<Player, RegisteredServer>
     }
 
     @Override
-    public @Nullable CompletableFuture<RegisteredServer> getServer(@NotNull String gameName, int proxiedPlayers, @Nullable Player targetPlayer) {
-        return null;
+    public @Nullable CompletableFuture<@NotNull RegisteredServer> getServer(final @NotNull String gameName, final int proxiedPlayers, final @Nullable Player targetPlayer) {
+        if (!this.getGamesInstantly().contains(gameName)) {
+            return null;
+        } else {
+            final @NotNull CompletableFuture<@NotNull RegisteredServer> workingServer = new CompletableFuture<>();
+            this.getGameMap().get(gameName).forEach(
+                    registeredServer -> registeredServer.ping().thenAccept(serverPing -> {
+                        if (serverPing.getPlayers().isPresent()) {
+                            final @NotNull ServerPing.Players players = serverPing.getPlayers().get();
+                            if (players.getMax() - players.getOnline() >= proxiedPlayers) {
+                                workingServer.complete(registeredServer);
+                            }
+                        }
+                    })
+            );
+            return workingServer;
+        }
     }
 }

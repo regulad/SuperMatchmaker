@@ -136,11 +136,6 @@ public class Matchmaker extends Plugin implements ProxyMatchmakerAPI<ProxiedPlay
         return this.getConfig().getSection("games").getKeys();
     }
 
-    @Override
-    public @NotNull CompletableFuture<@NotNull Collection<@NotNull String>> getGames() {
-        return CompletableFuture.completedFuture(this.getGamesInstantly());
-    }
-
     /**
      * Gets the servers part of a given game.
      *
